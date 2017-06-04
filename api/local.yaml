@@ -1,0 +1,45 @@
+application: newsai-1166
+version: dev
+runtime: go
+api_version: go1
+module: default
+
+handlers:
+- url: /tasks/removeExpiredSessions
+  script: _go_app
+  login: admin
+- url: /static
+  static_dir: static
+- url: /favicon.ico
+  static_files: static/favicon.png
+  upload: static/favicon.png
+- url: /.*
+  script: _go_app
+  secure: always
+
+env_variables:
+  BASE_URL: 'https://dev-dot-newsai-1166.appspot.com'
+  GOOGLEAUTHKEY: '66057093659-gdof2fgsc2j1e9v3ugkt5uvkek669ael.apps.googleusercontent.com'
+  GOOGLEAUTHSECRET: 'JLJLL4sV8nse8AyW8qE5zxnu'
+  INSTAGRAMAUTHKEY: '4314d27fa90640a3a5525fa36aecac86'
+  INSTAGRAMAUTHSECRET: '3a2c68c11a434e3785dd1a91e1c2b6e2'
+  LINKEDINAUTHKEY: '77kb6tooljh1iw'
+  LINKEDINAUTHSECRET: 'JTAlSxSUJq3IBmI5'
+  SECRETKEY: 'Cab7MNoPdBdX%fxN?yg3yWVM4^7KecETjfem6HwXizQqZTsG4#'
+  CSRFKEY: '4LaCHxT6qwvDovNCb8^TXmymn^Vcxx'
+  SECRETSALT: 'wsgAN6KkGKthcABExraWbBgr3^3yj,M3ppEd8}MpdypV[LavR8MjWJracUNjaxWQRvH6guWXrssP4vfU*qqiwjkwsE*3t'
+  SENDGRID_USER: 'newsaiorg'
+  SENDGRID_KEY: 'EswwpT3vxR9i6,]yzpQP'
+  SENDGRID_API_KEY: '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'
+  SPARKPOST_API_KEY: '49242f99238881148d8ff012f67d11f02ad33343'
+  CAMPAIGNMONITOR_CLIENT_KEY: 'bf2d81aaa06a5400e20be7577ca73dc0'
+  CAMPAIGNMONITOR_API_KEY: '3a3be2ea5413c7360af7012454216b8e'
+  SENTRY_DSN: 'https://eccfde5212974b1b9c284995885d0446:592890e0beac49a58d410f1e7061983e@app.getsentry.com/92935'
+  ELASTIC_USER: 'newsai'
+  ELASTIC_PASS: 'XkJRNRx2EGCd6'
+  STRIPE_PUBLISHABLE_KEY: 'pk_test_1OG5N9xYioPWBVf0cB4Yq9Sj'
+  STRIPE_SECRET_KEY: 'sk_test_628xQyC7fkB1RpA3a7PZNViY'
+
+inbound_services:
+- mail
+- channel_presence
