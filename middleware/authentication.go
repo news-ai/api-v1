@@ -7,8 +7,8 @@ import (
 	"google.golang.org/appengine"
 
 	"github.com/news-ai/api/auth"
+	"github.com/news-ai/api/utils"
 	"github.com/news-ai/tabulae/controllers"
-	"github.com/news-ai/tabulae/utils"
 
 	"github.com/news-ai/web/errors"
 )

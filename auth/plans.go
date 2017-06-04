@@ -10,7 +10,7 @@ import (
 	"google.golang.org/appengine"
 	"google.golang.org/appengine/log"
 
-	"github.com/news-ai/tabulae/billing"
+	"github.com/news-ai/api/billing"
 	"github.com/news-ai/tabulae/controllers"
 
 	"github.com/gorilla/csrf"

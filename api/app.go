@@ -12,18 +12,20 @@ import (
 	"github.com/rs/cors"
 	"github.com/unrolled/secure"
 
+	apiTasks "github.com/news-ai/api/tasks"
 	gaeTasks "github.com/news-ai/gaesessions/tasks"
+	tabulaeTasks "github.com/news-ai/tabulae/tasks"
 
 	"github.com/news-ai/api/auth"
 	"github.com/news-ai/api/middleware"
+	"github.com/news-ai/api/utils"
 
+	// Tabulae Imports
 	"github.com/news-ai/tabulae/incoming"
 	"github.com/news-ai/tabulae/notifications"
 	"github.com/news-ai/tabulae/routes"
 	"github.com/news-ai/tabulae/schedule"
 	"github.com/news-ai/tabulae/search"
-	"github.com/news-ai/tabulae/tasks"
-	"github.com/news-ai/tabulae/utils"
 
 	"github.com/news-ai/web/api"
 	commonMiddleware "github.com/news-ai/web/middleware"
@@ -248,16 +250,16 @@ func init() {
 
 	// Tasks needing to have middleware
 	// router.POST("/tasks/socialUsernameToDetails", tasks.SocialUsernameToDetails)
-	router.POST("/tasks/socialUsernameInvalid", tasks.SocialUsernameInvalid)
-	router.POST("/tasks/feedInvalid", tasks.FeedInvalid)
+	router.POST("/tasks/socialUsernameInvalid", tabulaeTasks.SocialUsernameInvalid)
+	router.POST("/tasks/feedInvalid", tabulaeTasks.FeedInvalid)
 
 	// Repeated tasks
 	// Tasks needing to not have middleware
-	http.HandleFunc("/.well-known/acme-challenge/ZCLfT3oIOdBK0iUF28viK2IEvmjJ46_8NzBEE0F6jxA", tasks.LetsEncryptValidation)
+	http.HandleFunc("/.well-known/acme-challenge/ZCLfT3oIOdBK0iUF28viK2IEvmjJ46_8NzBEE0F6jxA", apiTasks.LetsEncryptValidation)
 	http.HandleFunc("/tasks/sendSchedueleEmails", schedule.SchedueleEmailTask)
-	http.HandleFunc("/tasks/makeUsersInactive", tasks.MakeUsersInactive)
+	http.HandleFunc("/tasks/makeUsersInactive", apiTasks.MakeUsersInactive)
 	http.HandleFunc("/tasks/removeExpiredSessions", gaeTasks.RemoveExpiredSessionsHandler)
-	http.HandleFunc("/tasks/removeImportedFiles", tasks.RemoveImportedFilesHandler)
+	http.HandleFunc("/tasks/removeImportedFiles", tabulaeTasks.RemoveImportedFilesHandler)
 
 	// One-off tasks
 	// http.HandleFunc("/tasks/listsToIncludeTeamId", tasks.ListsToIncludeTeamId)
