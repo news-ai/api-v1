@@ -12,12 +12,15 @@ import (
 	"github.com/rs/cors"
 	"github.com/unrolled/secure"
 
+	// Tasks
 	apiTasks "github.com/news-ai/api/tasks"
 	gaeTasks "github.com/news-ai/gaesessions/tasks"
 	tabulaeTasks "github.com/news-ai/tabulae/tasks"
 
+	// API Common Imports
 	"github.com/news-ai/api/auth"
 	"github.com/news-ai/api/middleware"
+	apiRoutes "github.com/news-ai/api/routes"
 	"github.com/news-ai/api/utils"
 
 	// Tabulae Imports
@@ -162,8 +165,8 @@ func init() {
 	router.GET("/api/users/:id/:action", routes.UserActionHandler)
 	router.POST("/api/users/:id/:action", routes.UserActionHandler)
 
-	router.GET("/api/agencies", routes.AgenciesHandler)
-	router.GET("/api/agencies/:id", routes.AgencyHandler)
+	router.GET("/api/agencies", apiRoutes.AgenciesHandler)
+	router.GET("/api/agencies/:id", apiRoutes.AgencyHandler)
 
 	router.GET("/api/teams", routes.TeamsHandler)
 	router.POST("/api/teams", routes.TeamsHandler)
