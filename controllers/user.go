@@ -97,7 +97,7 @@ func getUsers(c context.Context, r *http.Request) ([]models.User, error) {
 	}
 
 	query := datastore.NewQuery("User")
-	query = constructQuery(query, r)
+	query = ConstructQuery(query, r)
 	ks, err := query.KeysOnly().GetAll(c, nil)
 	if err != nil {
 		log.Errorf(c, "%v", err)
@@ -724,7 +724,7 @@ func ConfirmAddEmailToUser(c context.Context, r *http.Request, id string) (model
 
 	if r.URL.Query().Get("code") != "" {
 		query := datastore.NewQuery("UserEmailCode").Filter("InviteCode =", r.URL.Query().Get("code"))
-		query = constructQuery(query, r)
+		query = ConstructQuery(query, r)
 		ks, err := query.KeysOnly().GetAll(c, nil)
 		if err != nil {
 			log.Errorf(c, "%v", err)

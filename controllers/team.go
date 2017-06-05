@@ -70,7 +70,7 @@ func GetTeams(c context.Context, r *http.Request) ([]models.Team, interface{}, i
 	}
 
 	query := datastore.NewQuery("Team")
-	query = constructQuery(query, r)
+	query = ConstructQuery(query, r)
 	ks, err := query.KeysOnly().GetAll(c, nil)
 	if err != nil {
 		log.Errorf(c, "%v", err)

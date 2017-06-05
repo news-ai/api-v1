@@ -79,7 +79,7 @@ func GetUserBillingHistory(c context.Context, r *http.Request) ([]models.Billing
 	}
 
 	query := datastore.NewQuery("BillingHistory").Filter("CreatedBy =", user.Id)
-	query = constructQuery(query, r)
+	query = ConstructQuery(query, r)
 	ks, err := query.KeysOnly().GetAll(c, nil)
 	if err != nil {
 		log.Errorf(c, "%v", err)

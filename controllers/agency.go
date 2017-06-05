@@ -112,7 +112,7 @@ func GetAgencies(c context.Context, r *http.Request) ([]models.Agency, interface
 	}
 
 	query := datastore.NewQuery("Agency")
-	query = constructQuery(query, r)
+	query = ConstructQuery(query, r)
 
 	ks, err := query.KeysOnly().GetAll(c, nil)
 	if err != nil {

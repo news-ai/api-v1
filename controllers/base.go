@@ -58,7 +58,7 @@ func normalizeOrderQuery(order string) string {
 	return operator + order
 }
 
-func constructQuery(query *datastore.Query, r *http.Request) *datastore.Query {
+func ConstructQuery(query *datastore.Query, r *http.Request) *datastore.Query {
 	order := gcontext.Get(r, "order").(string)
 	offset := gcontext.Get(r, "offset").(int)
 	limit := gcontext.Get(r, "limit").(int)
