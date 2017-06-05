@@ -14,7 +14,7 @@ import (
 	"google.golang.org/appengine"
 	"google.golang.org/appengine/log"
 
-	"github.com/news-ai/tabulae/controllers"
+	apiControllers "github.com/news-ai/api/controllers"
 
 	"github.com/news-ai/web/utilities"
 
@@ -34,7 +34,7 @@ func LinkedinLoginHandler(w http.ResponseWriter, r *http.Request, _ httprouter.P
 	c := appengine.NewContext(r)
 
 	// Make sure the user has been logged in when at linkedin auth
-	_, err := controllers.GetCurrentUser(c, r)
+	_, err := apiControllers.GetCurrentUser(c, r)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		fmt.Fprintln(w, "user not logged in")
@@ -69,7 +69,7 @@ func LinkedinLoginHandler(w http.ResponseWriter, r *http.Request, _ httprouter.P
 
 func LinkedinCallbackHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	c := appengine.NewContext(r)
-	currentUser, err := controllers.GetCurrentUser(c, r)
+	currentUser, err := apiControllers.GetCurrentUser(c, r)
 	if err != nil {
 		log.Infof(c, "%v", err)
 		fmt.Fprintln(w, "user not logged in")

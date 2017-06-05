@@ -3,7 +3,7 @@ package auth
 import (
 	"net/http"
 
-	"github.com/news-ai/tabulae/controllers"
+	"github.com/news-ai/api/controllers"
 
 	"github.com/news-ai/web/utilities"
 )

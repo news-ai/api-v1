@@ -10,8 +10,9 @@ import (
 	"google.golang.org/appengine"
 	"google.golang.org/appengine/log"
 
+	apiControllers "github.com/news-ai/api/controllers"
+
 	"github.com/news-ai/api/billing"
-	"github.com/news-ai/tabulae/controllers"
 
 	"github.com/gorilla/csrf"
 	"github.com/pquerna/ffjson/ffjson"
@@ -22,7 +23,7 @@ import (
 func TrialPlanPageHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		c := appengine.NewContext(r)
-		user, err := controllers.GetCurrentUser(c, r)
+		user, err := apiControllers.GetCurrentUser(c, r)
 
 		if r.URL.Query().Get("next") != "" {
 			session, _ := Store.Get(r, "sess")
@@ -43,7 +44,7 @@ func TrialPlanPageHandler() http.HandlerFunc {
 		}
 
 		if !user.IsActive {
-			userBilling, err := controllers.GetUserBilling(c, r, user)
+			userBilling, err := apiControllers.GetUserBilling(c, r, user)
 
 			// If the user has a user billing
 			if err == nil {
@@ -114,7 +115,7 @@ func TrialPlanPageHandler() http.HandlerFunc {
 func CancelPlanPageHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		c := appengine.NewContext(r)
-		user, err := controllers.GetCurrentUser(c, r)
+		user, err := apiControllers.GetCurrentUser(c, r)
 
 		if r.URL.Query().Get("next") != "" {
 			session, _ := Store.Get(r, "sess")
@@ -134,7 +135,7 @@ func CancelPlanPageHandler() http.HandlerFunc {
 			return
 		}
 
-		userBilling, err := controllers.GetUserBilling(c, r, user)
+		userBilling, err := apiControllers.GetUserBilling(c, r, user)
 
 		// If the user has a billing profile
 		if err == nil {
@@ -178,7 +179,7 @@ func CancelPlanHandler() http.HandlerFunc {
 		c := appengine.NewContext(r)
 
 		// To check if there is a user logged in
-		user, err := controllers.GetCurrentUser(c, r)
+		user, err := apiControllers.GetCurrentUser(c, r)
 
 		if r.URL.Query().Get("next") != "" {
 			session, _ := Store.Get(r, "sess")
@@ -200,7 +201,7 @@ func CancelPlanHandler() http.HandlerFunc {
 			return
 		}
 
-		userBilling, err := controllers.GetUserBilling(c, r, user)
+		userBilling, err := apiControllers.GetUserBilling(c, r, user)
 
 		// If the user has a billing profile
 		if err == nil {
@@ -237,7 +238,7 @@ func CancelPlanHandler() http.HandlerFunc {
 func ChoosePlanPageHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		c := appengine.NewContext(r)
-		user, err := controllers.GetCurrentUser(c, r)
+		user, err := apiControllers.GetCurrentUser(c, r)
 
 		if r.URL.Query().Get("next") != "" {
 			session, _ := Store.Get(r, "sess")
@@ -257,7 +258,7 @@ func ChoosePlanPageHandler() http.HandlerFunc {
 			return
 		}
 
-		userBilling, err := controllers.GetUserBilling(c, r, user)
+		userBilling, err := apiControllers.GetUserBilling(c, r, user)
 
 		// If the user has a billing profile
 		if err == nil {
@@ -293,7 +294,7 @@ func ChooseSwitchPlanHandler() http.HandlerFunc {
 		duration := r.FormValue("duration")
 
 		// To check if there is a user logged in
-		user, err := controllers.GetCurrentUser(c, r)
+		user, err := apiControllers.GetCurrentUser(c, r)
 
 		if r.URL.Query().Get("next") != "" {
 			session, _ := Store.Get(r, "sess")
@@ -315,7 +316,7 @@ func ChooseSwitchPlanHandler() http.HandlerFunc {
 			return
 		}
 
-		userBilling, err := controllers.GetUserBilling(c, r, user)
+		userBilling, err := apiControllers.GetUserBilling(c, r, user)
 
 		// If the user has a billing profile
 		if err == nil {
@@ -367,7 +368,7 @@ func ChoosePlanHandler() http.HandlerFunc {
 		duration := r.FormValue("duration")
 
 		// To check if there is a user logged in
-		user, err := controllers.GetCurrentUser(c, r)
+		user, err := apiControllers.GetCurrentUser(c, r)
 
 		if r.URL.Query().Get("next") != "" {
 			session, _ := Store.Get(r, "sess")
@@ -389,7 +390,7 @@ func ChoosePlanHandler() http.HandlerFunc {
 			return
 		}
 
-		userBilling, err := controllers.GetUserBilling(c, r, user)
+		userBilling, err := apiControllers.GetUserBilling(c, r, user)
 
 		// If the user has a billing profile
 		if err == nil {
@@ -494,7 +495,7 @@ func ConfirmPlanHandler() http.HandlerFunc {
 		coupon := r.FormValue("coupon")
 
 		// To check if there is a user logged in
-		user, err := controllers.GetCurrentUser(c, r)
+		user, err := apiControllers.GetCurrentUser(c, r)
 
 		if r.URL.Query().Get("next") != "" {
 			session, _ := Store.Get(r, "sess")
@@ -516,7 +517,7 @@ func ConfirmPlanHandler() http.HandlerFunc {
 			return
 		}
 
-		userBilling, err := controllers.GetUserBilling(c, r, user)
+		userBilling, err := apiControllers.GetUserBilling(c, r, user)
 
 		// If the user has a billing profile
 		if err == nil {
@@ -565,7 +566,7 @@ func ConfirmPlanHandler() http.HandlerFunc {
 func BillingPageHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		c := appengine.NewContext(r)
-		user, err := controllers.GetCurrentUser(c, r)
+		user, err := apiControllers.GetCurrentUser(c, r)
 
 		if r.URL.Query().Get("next") != "" {
 			session, _ := Store.Get(r, "sess")
@@ -585,7 +586,7 @@ func BillingPageHandler() http.HandlerFunc {
 			return
 		}
 
-		userBilling, err := controllers.GetUserBilling(c, r, user)
+		userBilling, err := apiControllers.GetUserBilling(c, r, user)
 
 		// If the user has a billing profile
 		if err == nil {
@@ -631,7 +632,7 @@ func BillingPageHandler() http.HandlerFunc {
 func PaymentMethodsPageHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		c := appengine.NewContext(r)
-		user, err := controllers.GetCurrentUser(c, r)
+		user, err := apiControllers.GetCurrentUser(c, r)
 
 		if r.URL.Query().Get("next") != "" {
 			session, _ := Store.Get(r, "sess")
@@ -651,7 +652,7 @@ func PaymentMethodsPageHandler() http.HandlerFunc {
 			return
 		}
 
-		userBilling, err := controllers.GetUserBilling(c, r, user)
+		userBilling, err := apiControllers.GetUserBilling(c, r, user)
 
 		// If the user has a billing profile
 		if err == nil {
@@ -686,7 +687,7 @@ func PaymentMethodsPageHandler() http.HandlerFunc {
 func PaymentMethodsHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		c := appengine.NewContext(r)
-		user, err := controllers.GetCurrentUser(c, r)
+		user, err := apiControllers.GetCurrentUser(c, r)
 
 		stripeToken := r.FormValue("stripeToken")
 
@@ -708,7 +709,7 @@ func PaymentMethodsHandler() http.HandlerFunc {
 			return
 		}
 
-		userBilling, err := controllers.GetUserBilling(c, r, user)
+		userBilling, err := apiControllers.GetUserBilling(c, r, user)
 		if err != nil {
 			log.Errorf(c, "%v", err)
 			http.Redirect(w, r, "/api/billing/plans/trial", 302)

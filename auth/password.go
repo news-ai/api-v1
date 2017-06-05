@@ -10,9 +10,11 @@ import (
 	"google.golang.org/appengine"
 	"google.golang.org/appengine/log"
 
+	apiControllers "github.com/news-ai/api/controllers"
+	apiModels "github.com/news-ai/api/models"
+
 	"github.com/news-ai/tabulae/controllers"
 	"github.com/news-ai/tabulae/emails"
-	"github.com/news-ai/tabulae/models"
 
 	"github.com/news-ai/web/utilities"
 
@@ -46,7 +48,7 @@ func PasswordLoginHandler() http.HandlerFunc {
 
 		log.Infof(c, "%v", validEmail.Address)
 
-		user, isOk, _ := controllers.ValidateUserPassword(r, validEmail.Address, password)
+		user, isOk, _ := apiControllers.ValidateUserPassword(r, validEmail.Address, password)
 		if isOk {
 			if user.GoogleId != "" {
 				notPassword := url.QueryEscape("You signed up with Google Authentication!")
@@ -106,7 +108,7 @@ func ChangePasswordHandler() http.HandlerFunc {
 		c := appengine.NewContext(r)
 		password := r.FormValue("password")
 
-		currentUser, err := controllers.GetCurrentUser(c, r)
+		currentUser, err := apiControllers.GetCurrentUser(c, r)
 
 		// Hash the password and save it into the datastore
 		hashedPassword, _ := utilities.HashPassword(password)
@@ -151,7 +153,7 @@ func ForgetPasswordHandler() http.HandlerFunc {
 			return
 		}
 
-		user, err := controllers.GetUserByEmail(c, email)
+		user, err := apiControllers.GetUserByEmail(c, email)
 		if err != nil {
 			noUserErr := url.QueryEscape("There is no user with this email!")
 			http.Redirect(w, r, "/api/auth?success=false&message="+noUserErr, 302)
@@ -210,7 +212,7 @@ func PasswordRegisterHandler() http.HandlerFunc {
 		// At some point we can make the invitationCode required
 		if invitationCode != "" {
 			log.Infof(c, "%v", invitationCode)
-			userInviteCode, err := controllers.GetInviteFromInvitationCode(c, r, invitationCode)
+			userInviteCode, err := apiControllers.GetInviteFromInvitationCode(c, r, invitationCode)
 			if err != nil {
 				invalidEmailAlert := url.QueryEscape("Your user invitation code is incorrect!")
 				http.Redirect(w, r, "/api/auth?success=false&message="+invalidEmailAlert, 302)
@@ -224,7 +226,7 @@ func PasswordRegisterHandler() http.HandlerFunc {
 		// Hash the password and save it into the datastore
 		hashedPassword, _ := utilities.HashPassword(password)
 
-		user := models.User{}
+		user := apiModels.User{}
 		user.FirstName = firstName
 		user.Email = validEmail.Address
 		user.Password = hashedPassword
@@ -269,7 +271,7 @@ func PasswordRegisterHandler() http.HandlerFunc {
 func PasswordLoginPageHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		c := appengine.NewContext(r)
-		_, err := controllers.GetCurrentUser(c, r)
+		_, err := apiControllers.GetCurrentUser(c, r)
 
 		if r.URL.Query().Get("next") != "" {
 			session, _ := Store.Get(r, "sess")
@@ -310,7 +312,7 @@ func PasswordLoginPageHandler() http.HandlerFunc {
 func PasswordRegisterPageHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		c := appengine.NewContext(r)
-		_, err := controllers.GetCurrentUser(c, r)
+		_, err := apiControllers.GetCurrentUser(c, r)
 
 		if r.URL.Query().Get("next") != "" {
 			session, _ := Store.Get(r, "sess")
@@ -344,7 +346,7 @@ func PasswordRegisterPageHandler() http.HandlerFunc {
 func PasswordInvitationPageHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		c := appengine.NewContext(r)
-		_, err := controllers.GetCurrentUser(c, r)
+		_, err := apiControllers.GetCurrentUser(c, r)
 
 		if r.URL.Query().Get("next") != "" {
 			session, _ := Store.Get(r, "sess")
@@ -366,7 +368,7 @@ func PasswordInvitationPageHandler() http.HandlerFunc {
 
 		// Invitation code
 		if r.URL.Query().Get("code") != "" {
-			invitation, err := controllers.GetInviteFromInvitationCode(c, r, r.URL.Query().Get("code"))
+			invitation, err := apiControllers.GetInviteFromInvitationCode(c, r, r.URL.Query().Get("code"))
 			if err != nil {
 				invalidEmailAlert := url.QueryEscape("Your user invitation code is incorrect!")
 				http.Redirect(w, r, "/api/auth?success=false&message="+invalidEmailAlert, 302)
@@ -375,7 +377,7 @@ func PasswordInvitationPageHandler() http.HandlerFunc {
 
 			invitorName := "Someone"
 
-			invitationUser, err := controllers.GetUserByIdUnauthorized(c, r, invitation.CreatedBy)
+			invitationUser, err := apiControllers.GetUserByIdUnauthorized(c, r, invitation.CreatedBy)
 			if err == nil {
 				if invitationUser.FirstName != "" {
 					invitorName = invitationUser.FirstName
@@ -401,7 +403,7 @@ func PasswordInvitationPageHandler() http.HandlerFunc {
 func ChangePasswordPageHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		c := appengine.NewContext(r)
-		currentUser, err := controllers.GetCurrentUser(c, r)
+		currentUser, err := apiControllers.GetCurrentUser(c, r)
 
 		if r.URL.Query().Get("next") != "" {
 			session, _ := Store.Get(r, "sess")
@@ -440,7 +442,7 @@ func ChangePasswordPageHandler() http.HandlerFunc {
 func ForgetPasswordPageHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		c := appengine.NewContext(r)
-		_, err := controllers.GetCurrentUser(c, r)
+		_, err := apiControllers.GetCurrentUser(c, r)
 
 		if r.URL.Query().Get("next") != "" {
 			session, _ := Store.Get(r, "sess")
@@ -477,7 +479,7 @@ func ResetPasswordHandler() http.HandlerFunc {
 		password := r.FormValue("password")
 		code := r.FormValue("code")
 
-		user, err := controllers.GetUserByResetCode(c, code)
+		user, err := apiControllers.GetUserByResetCode(c, code)
 		if err != nil {
 			userNotFound := url.QueryEscape("We could not find your user!")
 			log.Infof(c, "%v", code)
@@ -509,7 +511,7 @@ func ResetPasswordHandler() http.HandlerFunc {
 func ResetPasswordPageHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		c := appengine.NewContext(r)
-		_, err := controllers.GetCurrentUser(c, r)
+		_, err := apiControllers.GetCurrentUser(c, r)
 
 		// Invalid confirmation message
 		invalidResetCode := url.QueryEscape("Your reset code is invalid!")
@@ -543,7 +545,7 @@ func ResetPasswordPageHandler() http.HandlerFunc {
 				http.Redirect(w, r, "/api/auth?success=false&message="+invalidResetCode, 302)
 				return
 			}
-			_, err = controllers.GetUserByResetCode(c, codeUnscape)
+			_, err = apiControllers.GetUserByResetCode(c, codeUnscape)
 			if err != nil {
 				log.Infof(c, "%v", codeUnscape)
 				log.Infof(c, "%v", err)
@@ -586,7 +588,7 @@ func EmailConfirmationHandler() http.HandlerFunc {
 				http.Redirect(w, r, "/api/auth?success=false&message="+invalidConfirmation, 302)
 				return
 			}
-			user, err := controllers.GetUserByConfirmationCode(c, codeUnscape)
+			user, err := apiControllers.GetUserByConfirmationCode(c, codeUnscape)
 			if err != nil {
 				log.Infof(c, "%v", codeUnscape)
 				log.Infof(c, "%v", err)

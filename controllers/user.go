@@ -397,58 +397,6 @@ func GetUserByIdUnauthorized(c context.Context, r *http.Request, userId int64) (
 	return user, nil
 }
 
-/*
-* Create methods
- */
-
-func RegisterUser(r *http.Request, user models.User) (models.User, bool, error) {
-	c := appengine.NewContext(r)
-	existingUser, err := GetUserByEmail(c, user.Email)
-
-	if err != nil {
-		// Validation if the email is null
-		if user.Email == "" {
-			noEmailErr := errors.New("User does have an email")
-			log.Errorf(c, "%v", noEmailErr)
-			log.Errorf(c, "%v", user)
-			return models.User{}, false, noEmailErr
-		}
-
-		// Add the user to datastore
-		_, err = user.Create(c, r)
-		if err != nil {
-			log.Errorf(c, "%v", err)
-			return user, false, err
-		}
-
-		sync.ResourceSync(r, user.Id, "User", "create")
-
-		// Set the user
-		gcontext.Set(r, "user", user)
-		Update(c, r, &user)
-
-		// Create a sample media list for the user
-		_, _, err = CreateSampleMediaList(c, r, user)
-		if err != nil {
-			log.Errorf(c, "%v", err)
-		}
-		return user, true, nil
-	}
-
-	if user.RefreshToken != "" {
-		existingUser.RefreshToken = user.RefreshToken
-	}
-	existingUser.TokenType = user.TokenType
-	existingUser.GoogleExpiresIn = user.GoogleExpiresIn
-	existingUser.Gmail = user.Gmail
-	existingUser.GoogleId = user.GoogleId
-	existingUser.AccessToken = user.AccessToken
-	existingUser.GoogleCode = user.GoogleCode
-	existingUser.Save(c)
-
-	return existingUser, false, errors.New("User with the email already exists")
-}
-
 func AddUserToContext(c context.Context, r *http.Request, email string) {
 	_, ok := gcontext.GetOk(r, "user")
 	if !ok {

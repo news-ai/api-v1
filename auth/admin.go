@@ -9,13 +9,15 @@ import (
 
 	"github.com/news-ai/tabulae/controllers"
 
+	apiControllers "github.com/news-ai/api/controllers"
+
 	nError "github.com/news-ai/web/errors"
 )
 
 func AdminPageHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		c := appengine.NewContext(r)
-		user, _ := controllers.GetCurrentUser(c, r)
+		user, _ := apiControllers.GetCurrentUser(c, r)
 
 		if !user.IsAdmin {
 			err := errors.New("Forbidden")

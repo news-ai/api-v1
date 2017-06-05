@@ -13,9 +13,11 @@ import (
 
 	"github.com/julienschmidt/httprouter"
 
+	apiControllers "github.com/news-ai/api/controllers"
+	apiModels "github.com/news-ai/api/models"
+
 	"github.com/news-ai/tabulae/controllers"
 	"github.com/news-ai/tabulae/emails"
-	"github.com/news-ai/tabulae/models"
 
 	"github.com/news-ai/web/utilities"
 
@@ -86,7 +88,7 @@ func RemoveGmailHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Par
 	c := appengine.NewContext(r)
 
 	// Make sure the user has been logged in when at gmail auth
-	user, err := controllers.GetCurrentUser(c, r)
+	user, err := apiControllers.GetCurrentUser(c, r)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		fmt.Fprintln(w, "user not logged in")
@@ -94,7 +96,7 @@ func RemoveGmailHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Par
 	}
 
 	user.Gmail = false
-	controllers.SaveUser(c, r, &user)
+	apiControllers.SaveUser(c, r, &user)
 
 	if r.URL.Query().Get("next") != "" {
 		returnURL := r.URL.Query().Get("next")
@@ -113,7 +115,7 @@ func GmailLoginHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Para
 	c := appengine.NewContext(r)
 
 	// Make sure the user has been logged in when at gmail auth
-	user, err := controllers.GetCurrentUser(c, r)
+	user, err := apiControllers.GetCurrentUser(c, r)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		fmt.Fprintln(w, "user not logged in")
@@ -195,7 +197,7 @@ func GoogleCallbackHandler(w http.ResponseWriter, r *http.Request, _ httprouter.
 		return
 	}
 
-	newUser := models.User{}
+	newUser := apiModels.User{}
 	newUser.Email = googleUser.Email
 	newUser.GoogleId = googleUser.ID
 	newUser.FirstName = googleUser.GivenName

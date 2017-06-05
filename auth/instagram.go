@@ -14,7 +14,7 @@ import (
 	"github.com/news-ai/oauth2/instagram"
 	"golang.org/x/oauth2"
 
-	"github.com/news-ai/tabulae/controllers"
+	apiControllers "github.com/news-ai/api/controllers"
 
 	"github.com/news-ai/web/utilities"
 
@@ -34,7 +34,7 @@ func InstagramLoginHandler(w http.ResponseWriter, r *http.Request, _ httprouter.
 	c := appengine.NewContext(r)
 
 	// Make sure the user has been logged in when at instagram auth
-	_, err := controllers.GetCurrentUser(c, r)
+	_, err := apiControllers.GetCurrentUser(c, r)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		fmt.Fprintln(w, "user not logged in")
@@ -73,7 +73,7 @@ func InstagramLoginHandler(w http.ResponseWriter, r *http.Request, _ httprouter.
 func InstagramCallbackHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	c := appengine.NewContext(r)
 
-	currentUser, err := controllers.GetCurrentUser(c, r)
+	currentUser, err := apiControllers.GetCurrentUser(c, r)
 	if err != nil {
 		log.Infof(c, "%v", err)
 		fmt.Fprintln(w, "user not logged in")

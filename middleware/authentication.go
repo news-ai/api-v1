@@ -7,8 +7,8 @@ import (
 	"google.golang.org/appengine"
 
 	"github.com/news-ai/api/auth"
+	apiControllers "github.com/news-ai/api/controllers"
 	"github.com/news-ai/api/utils"
-	"github.com/news-ai/tabulae/controllers"
 
 	"github.com/news-ai/web/errors"
 )
@@ -29,7 +29,7 @@ func UpdateOrCreateUser(w http.ResponseWriter, r *http.Request, next http.Handle
 		return
 	} else {
 		if email != "" {
-			controllers.AddUserToContext(c, r, email)
+			apiControllers.AddUserToContext(c, r, email)
 		}
 	}
 

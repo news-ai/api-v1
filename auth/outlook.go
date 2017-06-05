@@ -13,7 +13,7 @@ import (
 
 	"github.com/julienschmidt/httprouter"
 
-	"github.com/news-ai/tabulae/controllers"
+	apiControllers "github.com/news-ai/api/controllers"
 
 	"github.com/news-ai/oauth2/outlook"
 	"github.com/news-ai/web/utilities"
@@ -52,7 +52,7 @@ func OutlookLoginHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Pa
 	c := appengine.NewContext(r)
 
 	// Make sure the user has been logged in when at outlook auth
-	user, err := controllers.GetCurrentUser(c, r)
+	user, err := apiControllers.GetCurrentUser(c, r)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		fmt.Fprintln(w, "user not logged in")
@@ -91,7 +91,7 @@ func RemoveOutlookHandler(w http.ResponseWriter, r *http.Request, _ httprouter.P
 	c := appengine.NewContext(r)
 
 	// Make sure the user has been logged in when at oulook auth
-	user, err := controllers.GetCurrentUser(c, r)
+	user, err := apiControllers.GetCurrentUser(c, r)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		fmt.Fprintln(w, "user not logged in")
@@ -99,7 +99,7 @@ func RemoveOutlookHandler(w http.ResponseWriter, r *http.Request, _ httprouter.P
 	}
 
 	user.Outlook = false
-	controllers.SaveUser(c, r, &user)
+	apiControllers.SaveUser(c, r, &user)
 
 	if r.URL.Query().Get("next") != "" {
 		returnURL := r.URL.Query().Get("next")
@@ -142,7 +142,7 @@ func OutlookCallbackHandler(w http.ResponseWriter, r *http.Request, _ httprouter
 	}
 
 	// Make sure the user has been logged in when at outlook auth
-	user, err := controllers.GetCurrentUser(c, r)
+	user, err := apiControllers.GetCurrentUser(c, r)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		fmt.Fprintln(w, "user not logged in")
@@ -182,7 +182,7 @@ func OutlookCallbackHandler(w http.ResponseWriter, r *http.Request, _ httprouter
 	user.Gmail = false
 	user.ExternalEmail = false
 
-	controllers.SaveUser(c, r, &user)
+	apiControllers.SaveUser(c, r, &user)
 
 	returnURL := session.Values["next"].(string)
 	u, err := url.Parse(returnURL)

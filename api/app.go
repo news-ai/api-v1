@@ -159,19 +159,19 @@ func init() {
 	 * API Handler
 	 */
 
-	router.GET("/api/users", routes.UsersHandler)
-	router.GET("/api/users/:id", routes.UserHandler)
-	router.PATCH("/api/users/:id", routes.UserHandler)
-	router.GET("/api/users/:id/:action", routes.UserActionHandler)
-	router.POST("/api/users/:id/:action", routes.UserActionHandler)
+	router.GET("/api/users", apiRoutes.UsersHandler)
+	router.GET("/api/users/:id", apiRoutes.UserHandler)
+	router.PATCH("/api/users/:id", apiRoutes.UserHandler)
+	router.GET("/api/users/:id/:action", apiRoutes.UserActionHandler)
+	router.POST("/api/users/:id/:action", apiRoutes.UserActionHandler)
 
 	router.GET("/api/agencies", apiRoutes.AgenciesHandler)
 	router.GET("/api/agencies/:id", apiRoutes.AgencyHandler)
 
-	router.GET("/api/teams", routes.TeamsHandler)
-	router.POST("/api/teams", routes.TeamsHandler)
-	router.GET("/api/teams/:id", routes.TeamHandler)
-	router.GET("/api/teams/:id/:action", routes.TeamActionHandler)
+	router.GET("/api/teams", apiRoutes.TeamsHandler)
+	router.POST("/api/teams", apiRoutes.TeamsHandler)
+	router.GET("/api/teams/:id", apiRoutes.TeamHandler)
+	router.GET("/api/teams/:id/:action", apiRoutes.TeamActionHandler)
 
 	router.GET("/api/publications", routes.PublicationsHandler)
 	router.POST("/api/publications", routes.PublicationsHandler)
@@ -228,8 +228,8 @@ func init() {
 
 	router.GET("/api/notifications", routes.NotificationsHandler)
 
-	router.GET("/api/invites", routes.InvitesHandler)
-	router.POST("/api/invites", routes.InvitesHandler)
+	router.GET("/api/invites", apiRoutes.InvitesHandler)
+	router.POST("/api/invites", apiRoutes.InvitesHandler)
 
 	// Security fixes
 	secureMiddleware := secure.New(secure.Options{
