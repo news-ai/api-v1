@@ -16,8 +16,8 @@ import (
 	"github.com/stripe/stripe-go"
 	"github.com/stripe/stripe-go/client"
 
+	"github.com/news-ai/api/models"
 	"github.com/news-ai/tabulae/emails"
-	"github.com/news-ai/tabulae/models"
 )
 
 func AddFreeTrialToUser(r *http.Request, user models.User, plan string) (int64, error) {

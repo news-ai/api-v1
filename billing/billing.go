@@ -15,7 +15,7 @@ import (
 	"github.com/stripe/stripe-go"
 	"github.com/stripe/stripe-go/client"
 
-	"github.com/news-ai/tabulae/models"
+	"github.com/news-ai/api/models"
 )
 
 type Card struct {

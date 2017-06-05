@@ -15,7 +15,7 @@ import (
 
 	"github.com/news-ai/web/utilities"
 
-	"github.com/news-ai/tabulae/models"
+	"github.com/news-ai/api/models"
 	"github.com/news-ai/tabulae/search"
 )
 

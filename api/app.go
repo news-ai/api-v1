@@ -226,8 +226,6 @@ func init() {
 	router.GET("/api/feeds/:id", routes.FeedHandler)
 	router.DELETE("/api/feeds/:id", routes.FeedHandler)
 
-	router.GET("/api/databases", routes.DatabasesHandler)
-
 	router.GET("/api/notifications", routes.NotificationsHandler)
 
 	router.GET("/api/invites", routes.InvitesHandler)
