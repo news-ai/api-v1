@@ -76,6 +76,17 @@ func TrialPlanPageHandler() http.HandlerFunc {
 				return
 			}
 
+			// If they have a coupon they want to use (to expire later)
+			if user.PromoCode != "" {
+				if user.PromoCode == "PRCOUTURE" || user.PromoCode == "GOPUBLIX" {
+					userBilling, err := apiControllers.GetUserBilling(c, r, user)
+					if err != nil {
+						userBilling.Expires = userBilling.Expires.AddDate(0, 3, 0)
+						userBilling.Save(c)
+					}
+				}
+			}
+
 			// If not then their is now probably successful so we redirect them back
 			returnURL := "https://tabulae.newsai.co/"
 			session, _ := Store.Get(r, "sess")

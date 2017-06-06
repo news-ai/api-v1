@@ -99,6 +99,8 @@ type User struct {
 
 	UseSparkPost bool `json:"-"`
 
+	PromoCode string `json:"-"`
+
 	IsAdmin  bool `json:"-"`
 	IsActive bool `json:"isactive"`
 

@@ -196,6 +196,7 @@ func PasswordRegisterHandler() http.HandlerFunc {
 		email := r.FormValue("email")
 		password := r.FormValue("password")
 		invitationCode := r.FormValue("invitationcode")
+		promoCode := r.FormValue("couponcode")
 
 		email = strings.ToLower(email)
 
@@ -235,6 +236,7 @@ func PasswordRegisterHandler() http.HandlerFunc {
 		user.ConfirmationCode = utilities.RandToken()
 		user.InvitedBy = invitedBy // Potentially also email the person who invited them
 		user.IsActive = false
+		user.PromoCode = promoCode
 
 		// Register user
 		_, isOk, err := controllers.RegisterUser(r, user)
