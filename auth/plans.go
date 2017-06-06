@@ -80,9 +80,11 @@ func TrialPlanPageHandler() http.HandlerFunc {
 			if user.PromoCode != "" {
 				if user.PromoCode == "PRCOUTURE" || user.PromoCode == "GOPUBLIX" {
 					userBilling, err := apiControllers.GetUserBilling(c, r, user)
-					if err != nil {
+					if err == nil {
 						userBilling.Expires = userBilling.Expires.AddDate(0, 3, 0)
 						userBilling.Save(c)
+					} else {
+						log.Infof(c, "%v", err)
 					}
 				}
 			}
