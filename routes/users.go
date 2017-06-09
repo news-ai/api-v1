@@ -13,6 +13,8 @@ import (
 
 	"github.com/news-ai/api/controllers"
 
+	pitchControllers "github.com/news-ai/pitch/controllers"
+
 	tabulaeControllers "github.com/news-ai/tabulae/controllers"
 	"github.com/news-ai/tabulae/notifications"
 
@@ -33,6 +35,8 @@ func handleUserActions(c context.Context, r *http.Request, id string, action str
 		case "campaigns":
 			val, included, count, total, err := tabulaeControllers.GetEmailCampaignsForUser(c, r, id)
 			return api.BaseResponseHandler(val, included, count, total, err, r)
+		case "profile":
+			return api.BaseSingleResponseHandler(pitchControllers.GetUserProfile(c, r, id))
 		}
 	case "POST":
 		switch action {
@@ -44,6 +48,13 @@ func handleUserActions(c context.Context, r *http.Request, id string, action str
 			return api.BaseSingleResponseHandler(controllers.RemoveEmailFromUser(c, r, id))
 		case "add-plan":
 			return api.BaseSingleResponseHandler(controllers.AddPlanToUser(c, r, id))
+		case "profile":
+			return api.BaseSingleResponseHandler(pitchControllers.CreateUserProfile(c, r, id))
+		}
+	case "PATCH":
+		switch action {
+		case "profile":
+			return api.BaseSingleResponseHandler(pitchControllers.UpdateUserProfile(c, r, id))
 		}
 	}
 	return nil, errors.New("method not implemented")

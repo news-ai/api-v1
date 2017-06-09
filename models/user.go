@@ -106,6 +106,9 @@ type User struct {
 
 	TrialFeedback bool `json:"trialfeedback"`
 
+	Type    string `json:"type"` // Journalist or PR
+	Profile int64  `json:"userprofile"`
+
 	EnhanceCredits int `json:"enhancecredits"`
 }
 

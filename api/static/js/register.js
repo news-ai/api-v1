@@ -8,6 +8,11 @@ if (emailParameter) {
     document.getElementById("email").value = emailParameter;
 }
 
+var couponParameter = $.urlParam('coupon');
+if (couponParameter) {
+    document.getElementById("coupon_code").value = couponParameter;
+}
+
 $(function () {
      // Checking password
     var instance = $('form').parsley();
