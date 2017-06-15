@@ -26,9 +26,12 @@ import (
 	// Tabulae Imports
 	"github.com/news-ai/tabulae/incoming"
 	"github.com/news-ai/tabulae/notifications"
-	"github.com/news-ai/tabulae/routes"
+	tabulaeRoutes "github.com/news-ai/tabulae/routes"
 	"github.com/news-ai/tabulae/schedule"
 	"github.com/news-ai/tabulae/search"
+
+	// Pitch Imports
+	pitchRoutes "github.com/news-ai/pitch/routes"
 
 	"github.com/news-ai/web/api"
 	commonMiddleware "github.com/news-ai/web/middleware"
@@ -159,6 +162,10 @@ func init() {
 	 * API Handler
 	 */
 
+	/*
+	 * General
+	 */
+
 	router.GET("/api/users", apiRoutes.UsersHandler)
 	router.GET("/api/users/:id", apiRoutes.UserHandler)
 	router.PATCH("/api/users/:id", apiRoutes.UserHandler)
@@ -173,63 +180,74 @@ func init() {
 	router.GET("/api/teams/:id", apiRoutes.TeamHandler)
 	router.GET("/api/teams/:id/:action", apiRoutes.TeamActionHandler)
 
-	router.GET("/api/publications", routes.PublicationsHandler)
-	router.POST("/api/publications", routes.PublicationsHandler)
-	router.GET("/api/publications/:id", routes.PublicationHandler)
-	router.PATCH("/api/publications/:id", routes.PublicationHandler)
-	router.GET("/api/publications/:id/:action", routes.PublicationActionHandler)
-
-	router.GET("/api/contacts", routes.ContactsHandler)
-	router.POST("/api/contacts", routes.ContactsHandler)
-	router.PATCH("/api/contacts", routes.ContactsHandler)
-	router.GET("/api/contacts/:id", routes.ContactHandler)
-	router.PATCH("/api/contacts/:id", routes.ContactHandler)
-	router.POST("/api/contacts/:id", routes.ContactHandler)
-	router.DELETE("/api/contacts/:id", routes.ContactHandler)
-	router.GET("/api/contacts/:id/:action", routes.ContactActionHandler)
-
-	router.GET("/api/files", routes.FilesHandler)
-	router.GET("/api/files/:id", routes.FileHandler)
-	router.GET("/api/files/:id/:action", routes.FileActionHandler)
-	router.POST("/api/files/:id/:action", routes.FileActionHandler)
-
-	router.GET("/api/lists", routes.MediaListsHandler)
-	router.POST("/api/lists", routes.MediaListsHandler)
-	router.GET("/api/lists/:id", routes.MediaListHandler)
-	router.PATCH("/api/lists/:id", routes.MediaListHandler)
-	router.DELETE("/api/lists/:id", routes.MediaListHandler)
-	router.GET("/api/lists/:id/:action", routes.MediaListActionHandler)
-	router.POST("/api/lists/:id/:action", routes.MediaListActionHandler)
-
-	router.GET("/api/emails", routes.EmailsHandler)
-	router.POST("/api/emails", routes.EmailsHandler)
-	router.PATCH("/api/emails", routes.EmailsHandler)
-	router.GET("/api/emails/:id", routes.EmailHandler)
-	router.PATCH("/api/emails/:id", routes.EmailHandler)
-	router.POST("/api/emails/:id", routes.EmailHandler)
-	router.GET("/api/emails/:id/:action", routes.EmailActionHandler)
-	router.POST("/api/emails/:id/:action", routes.EmailActionHandler)
-
-	router.GET("/api/email-settings", routes.EmailSettingsHandler)
-	router.POST("/api/email-settings", routes.EmailSettingsHandler)
-	router.GET("/api/email-settings/:id", routes.EmailSettingHandler)
-	router.POST("/api/email-settings/:id", routes.EmailSettingHandler)
-	router.GET("/api/email-settings/:id/:action", routes.EmailSettingActionHandler)
-
-	router.GET("/api/templates", routes.TemplatesHandler)
-	router.POST("/api/templates", routes.TemplatesHandler)
-	router.GET("/api/templates/:id", routes.TemplateHandler)
-	router.PATCH("/api/templates/:id", routes.TemplateHandler)
-
-	router.GET("/api/feeds", routes.FeedsHandler)
-	router.POST("/api/feeds", routes.FeedsHandler)
-	router.GET("/api/feeds/:id", routes.FeedHandler)
-	router.DELETE("/api/feeds/:id", routes.FeedHandler)
-
-	router.GET("/api/notifications", routes.NotificationsHandler)
-
 	router.GET("/api/invites", apiRoutes.InvitesHandler)
 	router.POST("/api/invites", apiRoutes.InvitesHandler)
+
+	/*
+	 * Tabulae
+	 */
+
+	router.GET("/api/publications", tabulaeRoutes.PublicationsHandler)
+	router.POST("/api/publications", tabulaeRoutes.PublicationsHandler)
+	router.GET("/api/publications/:id", tabulaeRoutes.PublicationHandler)
+	router.PATCH("/api/publications/:id", tabulaeRoutes.PublicationHandler)
+	router.GET("/api/publications/:id/:action", tabulaeRoutes.PublicationActionHandler)
+
+	router.GET("/api/contacts", tabulaeRoutes.ContactsHandler)
+	router.POST("/api/contacts", tabulaeRoutes.ContactsHandler)
+	router.PATCH("/api/contacts", tabulaeRoutes.ContactsHandler)
+	router.GET("/api/contacts/:id", tabulaeRoutes.ContactHandler)
+	router.PATCH("/api/contacts/:id", tabulaeRoutes.ContactHandler)
+	router.POST("/api/contacts/:id", tabulaeRoutes.ContactHandler)
+	router.DELETE("/api/contacts/:id", tabulaeRoutes.ContactHandler)
+	router.GET("/api/contacts/:id/:action", tabulaeRoutes.ContactActionHandler)
+
+	router.GET("/api/files", tabulaeRoutes.FilesHandler)
+	router.GET("/api/files/:id", tabulaeRoutes.FileHandler)
+	router.GET("/api/files/:id/:action", tabulaeRoutes.FileActionHandler)
+	router.POST("/api/files/:id/:action", tabulaeRoutes.FileActionHandler)
+
+	router.GET("/api/lists", tabulaeRoutes.MediaListsHandler)
+	router.POST("/api/lists", tabulaeRoutes.MediaListsHandler)
+	router.GET("/api/lists/:id", tabulaeRoutes.MediaListHandler)
+	router.PATCH("/api/lists/:id", tabulaeRoutes.MediaListHandler)
+	router.DELETE("/api/lists/:id", tabulaeRoutes.MediaListHandler)
+	router.GET("/api/lists/:id/:action", tabulaeRoutes.MediaListActionHandler)
+	router.POST("/api/lists/:id/:action", tabulaeRoutes.MediaListActionHandler)
+
+	router.GET("/api/emails", tabulaeRoutes.EmailsHandler)
+	router.POST("/api/emails", tabulaeRoutes.EmailsHandler)
+	router.PATCH("/api/emails", tabulaeRoutes.EmailsHandler)
+	router.GET("/api/emails/:id", tabulaeRoutes.EmailHandler)
+	router.PATCH("/api/emails/:id", tabulaeRoutes.EmailHandler)
+	router.POST("/api/emails/:id", tabulaeRoutes.EmailHandler)
+	router.GET("/api/emails/:id/:action", tabulaeRoutes.EmailActionHandler)
+	router.POST("/api/emails/:id/:action", tabulaeRoutes.EmailActionHandler)
+
+	router.GET("/api/email-settings", tabulaeRoutes.EmailSettingsHandler)
+	router.POST("/api/email-settings", tabulaeRoutes.EmailSettingsHandler)
+	router.GET("/api/email-settings/:id", tabulaeRoutes.EmailSettingHandler)
+	router.POST("/api/email-settings/:id", tabulaeRoutes.EmailSettingHandler)
+	router.GET("/api/email-settings/:id/:action", tabulaeRoutes.EmailSettingActionHandler)
+
+	router.GET("/api/templates", tabulaeRoutes.TemplatesHandler)
+	router.POST("/api/templates", tabulaeRoutes.TemplatesHandler)
+	router.GET("/api/templates/:id", tabulaeRoutes.TemplateHandler)
+	router.PATCH("/api/templates/:id", tabulaeRoutes.TemplateHandler)
+
+	router.GET("/api/feeds", tabulaeRoutes.FeedsHandler)
+	router.POST("/api/feeds", tabulaeRoutes.FeedsHandler)
+	router.GET("/api/feeds/:id", tabulaeRoutes.FeedHandler)
+	router.DELETE("/api/feeds/:id", tabulaeRoutes.FeedHandler)
+
+	router.GET("/api/notifications", tabulaeRoutes.NotificationsHandler)
+
+	/*
+	 * Media Database
+	 */
+
+	router.GET("/api/media-databases", pitchRoutes.MediaDatabasesHandler)
+	router.GET("/api/media-databases/:id", pitchRoutes.MediaDatabaseHandler)
 
 	// Security fixes
 	secureMiddleware := secure.New(secure.Options{
