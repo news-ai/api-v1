@@ -13,7 +13,7 @@ import (
 	"google.golang.org/appengine/log"
 	"google.golang.org/appengine/urlfetch"
 
-	// pitchModels "github.com/news-ai/pitch/models"
+	pitchModels "github.com/news-ai/pitch/models"
 
 	elastic "github.com/news-ai/elastic-appengine"
 )
@@ -256,6 +256,29 @@ func SearchContactDatabase(c context.Context, r *http.Request, email string) (En
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return EnhanceFullContactProfileResponse{}, err
+	}
+
+	return enhanceResponse, nil
+}
+
+func SearchContactDatabaseForMediaDatbase(c context.Context, r *http.Request, email string) (pitchModels.MediaDatabaseProfile, error) {
+	contextWithTimeout, _ := context.WithTimeout(c, time.Second*15)
+	client := urlfetch.Client(contextWithTimeout)
+	getUrl := "https://enhance.newsai.org/fullcontact/" + email
+
+	req, _ := http.NewRequest("GET", getUrl, nil)
+
+	resp, err := client.Do(req)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return pitchModels.MediaDatabaseProfile{}, err
+	}
+
+	var enhanceResponse pitchModels.MediaDatabaseProfile
+	err = json.NewDecoder(resp.Body).Decode(&enhanceResponse)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return pitchModels.MediaDatabaseProfile{}, err
 	}
 
 	return enhanceResponse, nil

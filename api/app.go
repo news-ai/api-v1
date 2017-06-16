@@ -249,6 +249,7 @@ func init() {
 	 */
 
 	router.GET("/api/database-contacts", pitchRoutes.MediaDatabaseContactsHandler)
+	router.POST("/api/database-contacts", pitchRoutes.MediaDatabaseContactsHandler)
 	router.GET("/api/database-contacts/:id", pitchRoutes.MediaDatabaseContactHandler)
 
 	// Security fixes
