@@ -229,6 +229,12 @@ func InitializeElasticSearch() {
 	contactDatabaseElastic.Type = "contacts"
 	elasticContactDatabase = &contactDatabaseElastic
 
+	mediaDatabaseElastic := elastic.Elastic{}
+	mediaDatabaseElastic.BaseURL = NewBaseURL
+	mediaDatabaseElastic.Index = "md"
+	mediaDatabaseElastic.Type = "contacts"
+	elasticMediaDatabase = &mediaDatabaseElastic
+
 	headlineElastic := elastic.Elastic{}
 	headlineElastic.BaseURL = NewBaseURL
 	headlineElastic.Index = "headlines"

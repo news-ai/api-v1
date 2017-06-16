@@ -21,6 +21,7 @@ import (
 	"github.com/news-ai/api/auth"
 	"github.com/news-ai/api/middleware"
 	apiRoutes "github.com/news-ai/api/routes"
+	apiSearch "github.com/news-ai/api/search"
 	"github.com/news-ai/api/utils"
 
 	// Tabulae Imports
@@ -59,6 +60,7 @@ func init() {
 	// Initialize the environment for a particular URL
 	utils.InitURL()
 	auth.SetRedirectURL()
+	apiSearch.InitializeElasticSearch()
 	search.InitializeElasticSearch()
 
 	// Initialize router
@@ -246,8 +248,8 @@ func init() {
 	 * Media Database
 	 */
 
-	router.GET("/api/media-databases", pitchRoutes.MediaDatabasesHandler)
-	router.GET("/api/media-databases/:id", pitchRoutes.MediaDatabaseHandler)
+	router.GET("/api/database-contacts", pitchRoutes.MediaDatabaseContactsHandler)
+	router.GET("/api/database-contacts/:id", pitchRoutes.MediaDatabaseContactHandler)
 
 	// Security fixes
 	secureMiddleware := secure.New(secure.Options{

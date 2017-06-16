@@ -2,6 +2,7 @@ package search
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"time"
 
@@ -12,13 +13,14 @@ import (
 	"google.golang.org/appengine/log"
 	"google.golang.org/appengine/urlfetch"
 
-	pitchModels "github.com/news-ai/pitch/models"
+	// pitchModels "github.com/news-ai/pitch/models"
 
 	elastic "github.com/news-ai/elastic-appengine"
 )
 
 var (
 	elasticContactDatabase *elastic.Elastic
+	elasticMediaDatabase   *elastic.Elastic
 )
 
 type EnhanceResponse struct {
@@ -169,6 +171,29 @@ type DatabaseResponse struct {
 	Data  interface{} `json:"data"`
 }
 
+func searchContactInMediaDatabase(c context.Context, elasticQuery interface{}) (interface{}, error) {
+	hits, err := elasticMediaDatabase.QueryStruct(c, elasticQuery)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return nil, err
+	}
+
+	profileHits := hits.Hits
+
+	if len(profileHits) == 0 {
+		log.Infof(c, "%v", profileHits)
+		return nil, errors.New("No Media Database profile for this email")
+	}
+
+	var interfaceSlice = make([]interface{}, len(profileHits))
+
+	for i := 0; i < len(profileHits); i++ {
+		interfaceSlice[i] = profileHits[i].Source.Data
+	}
+
+	return interfaceSlice, nil
+}
+
 func searchESContactsDatabase(c context.Context, elasticQuery elastic.ElasticQuery) (interface{}, int, int, error) {
 	hits, err := elasticContactDatabase.QueryStruct(c, elasticQuery)
 	if err != nil {
@@ -236,27 +261,14 @@ func SearchContactDatabase(c context.Context, r *http.Request, email string) (En
 	return enhanceResponse, nil
 }
 
-func SearchContactDatabaseForMediaDatabase(c context.Context, r *http.Request, email string) (pitchModels.MediaDatabaseProfile, error) {
-	contextWithTimeout, _ := context.WithTimeout(c, time.Second*15)
-	client := urlfetch.Client(contextWithTimeout)
-	getUrl := "https://enhance.newsai.org/fullcontact/" + email
-
-	req, _ := http.NewRequest("GET", getUrl, nil)
-
-	resp, err := client.Do(req)
-	if err != nil {
-		log.Errorf(c, "%v", err)
-		return pitchModels.MediaDatabaseProfile{}, err
+func SearchContactInMediaDatabase(c context.Context, r *http.Request, email string) (interface{}, error) {
+	if email == "" {
+		return nil, nil
 	}
 
-	var enhanceResponse pitchModels.MediaDatabaseProfile
-	err = json.NewDecoder(resp.Body).Decode(&enhanceResponse)
-	if err != nil {
-		log.Errorf(c, "%v", err)
-		return pitchModels.MediaDatabaseProfile{}, err
-	}
-
-	return enhanceResponse, nil
+	elasticQuery := ElasticMGetQuery{}
+	elasticQuery.Ids = append(elasticQuery.Ids, email)
+	return searchContactInMediaDatabase(c, elasticQuery)
 }
 
 func SearchESContactsDatabase(c context.Context, r *http.Request) (interface{}, int, int, error) {
