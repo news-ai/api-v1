@@ -171,27 +171,6 @@ type DatabaseResponse struct {
 	Data  interface{} `json:"data"`
 }
 
-func searchContactInMediaDatabase(c context.Context, elasticQuery interface{}) (interface{}, error) {
-	hits, err := elasticMediaDatabase.QueryStructMGet(c, elasticQuery)
-	if err != nil {
-		log.Errorf(c, "%v", err)
-		return nil, err
-	}
-
-	if len(hits) == 0 {
-		log.Infof(c, "%v", hits)
-		return nil, errors.New("No Media Database profile for this email")
-	}
-
-	var interfaceSlice = make([]interface{}, len(hits))
-
-	for i := 0; i < len(hits); i++ {
-		interfaceSlice[i] = hits[i].Source.Data
-	}
-
-	return interfaceSlice, nil
-}
-
 func searchESContactsDatabase(c context.Context, elasticQuery elastic.ElasticQuery) (interface{}, int, int, error) {
 	hits, err := elasticContactDatabase.QueryStruct(c, elasticQuery)
 	if err != nil {
@@ -282,14 +261,39 @@ func SearchContactDatabaseForMediaDatbase(c context.Context, r *http.Request, em
 	return enhanceResponse, nil
 }
 
-func SearchContactInMediaDatabase(c context.Context, r *http.Request, email string) (interface{}, error) {
-	if email == "" {
-		return nil, nil
+func SearchContactInMediaDatabase(c context.Context, r *http.Request, email string) (pitchModels.MediaDatabaseProfile, error) {
+	contextWithTimeout, _ := context.WithTimeout(c, time.Second*15)
+	client := urlfetch.Client(contextWithTimeout)
+	getUrl := "https://enhance.newsai.org/md/" + email
+
+	req, _ := http.NewRequest("GET", getUrl, nil)
+
+	resp, err := client.Do(req)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return pitchModels.MediaDatabaseProfile{}, err
 	}
 
-	elasticQuery := ElasticMGetQuery{}
-	elasticQuery.Ids = append(elasticQuery.Ids, email)
-	return searchContactInMediaDatabase(c, elasticQuery)
+	if resp.StatusCode != 200 {
+		err = errors.New("Invalid response from ES")
+		log.Infof(c, "%v", err)
+		return pitchModels.MediaDatabaseProfile{}, err
+	}
+
+	var enhanceResponse pitchModels.MediaDatabaseProfile
+	err = json.NewDecoder(resp.Body).Decode(&enhanceResponse)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return pitchModels.MediaDatabaseProfile{}, err
+	}
+
+	if enhanceResponse.Data.Status != 200 {
+		err = errors.New("Could not retrieve profile from ES")
+		log.Infof(c, "%v", err)
+		return pitchModels.MediaDatabaseProfile{}, err
+	}
+
+	return enhanceResponse, nil
 }
 
 func SearchESContactsDatabase(c context.Context, r *http.Request) (interface{}, int, int, error) {
