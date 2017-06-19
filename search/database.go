@@ -172,23 +172,21 @@ type DatabaseResponse struct {
 }
 
 func searchContactInMediaDatabase(c context.Context, elasticQuery interface{}) (interface{}, error) {
-	hits, err := elasticMediaDatabase.QueryStruct(c, elasticQuery)
+	hits, err := elasticMediaDatabase.QueryStructMGet(c, elasticQuery)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return nil, err
 	}
 
-	profileHits := hits.Hits
-
-	if len(profileHits) == 0 {
-		log.Infof(c, "%v", profileHits)
+	if len(hits) == 0 {
+		log.Infof(c, "%v", hits)
 		return nil, errors.New("No Media Database profile for this email")
 	}
 
-	var interfaceSlice = make([]interface{}, len(profileHits))
+	var interfaceSlice = make([]interface{}, len(hits))
 
-	for i := 0; i < len(profileHits); i++ {
-		interfaceSlice[i] = profileHits[i].Source.Data
+	for i := 0; i < len(hits); i++ {
+		interfaceSlice[i] = hits[i].Source.Data
 	}
 
 	return interfaceSlice, nil

@@ -195,3 +195,9 @@ indexes:
     - name: IsDeleted
     - name: Created
       direction: desc
+
+- kind: Email
+  properties:
+  - name: To
+  - name: Created
+    direction: desc
