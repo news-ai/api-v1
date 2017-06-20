@@ -46,7 +46,7 @@ func (h *Headline) FillStruct(m map[string]interface{}) error {
 	return nil
 }
 
-func searchHeadline(c context.Context, elasticQuery interface{}, feedUrls []models.Feed, checkMap bool) ([]Headline, int, error) {
+func searchHeadline(c context.Context, elasticQuery interface{}, stringFeeds []string, feedUrls []models.Feed, checkMap bool) ([]Headline, int, error) {
 	hits, err := elasticHeadline.QueryStruct(c, elasticQuery)
 	if err != nil {
 		log.Errorf(c, "%v", err)
@@ -56,6 +56,10 @@ func searchHeadline(c context.Context, elasticQuery interface{}, feedUrls []mode
 	feedsMap := map[string]bool{}
 	for i := 0; i < len(feedUrls); i++ {
 		feedsMap[strings.ToLower(feedUrls[i].FeedURL)] = true
+	}
+
+	for i := 0; i < len(stringFeeds); i++ {
+		feedsMap[strings.ToLower(stringFeeds[i])] = true
 	}
 
 	headlineHits := hits.Hits
@@ -86,8 +90,8 @@ func searchHeadline(c context.Context, elasticQuery interface{}, feedUrls []mode
 	return headlines, hits.Total, nil
 }
 
-func SearchHeadlinesByResourceId(c context.Context, r *http.Request, feeds []models.Feed) ([]Headline, int, error) {
-	if len(feeds) == 0 {
+func SearchHeadlinesByResourceId(c context.Context, r *http.Request, feeds []models.Feed, stringFeeds []string) ([]Headline, int, error) {
+	if len(feeds) == 0 && len(stringFeeds) == 0 {
 		return []Headline{}, 0, nil
 	}
 
@@ -97,6 +101,13 @@ func SearchHeadlinesByResourceId(c context.Context, r *http.Request, feeds []mod
 	elasticQuery := elastic.ElasticFilterWithSort{}
 	elasticQuery.Size = limit
 	elasticQuery.From = offset
+
+	for i := 0; i < len(stringFeeds); i++ {
+		elasticFeedUrlQuery := ElasticFeedUrlQuery{}
+		feedUrl := strings.ToLower(stringFeeds[i])
+		elasticFeedUrlQuery.Match.FeedURL = feedUrl
+		elasticQuery.Query.Bool.Should = append(elasticQuery.Query.Bool.Should, elasticFeedUrlQuery)
+	}
 
 	for i := 0; i < len(feeds); i++ {
 		elasticFeedUrlQuery := ElasticFeedUrlQuery{}
@@ -123,7 +134,7 @@ func SearchHeadlinesByResourceId(c context.Context, r *http.Request, feeds []mod
 	elasticPublishDateQuery.DataPublishDate.Mode = "avg"
 	elasticQuery.Sort = append(elasticQuery.Sort, elasticPublishDateQuery)
 
-	return searchHeadline(c, elasticQuery, feeds, true)
+	return searchHeadline(c, elasticQuery, stringFeeds, feeds, true)
 }
 
 func SearchHeadlinesByPublicationId(c context.Context, r *http.Request, publicationId int64) ([]Headline, int, error) {
@@ -147,5 +158,5 @@ func SearchHeadlinesByPublicationId(c context.Context, r *http.Request, publicat
 	elasticPublishDateQuery.DataPublishDate.Mode = "avg"
 	elasticQuery.Sort = append(elasticQuery.Sort, elasticPublishDateQuery)
 
-	return searchHeadline(c, elasticQuery, []models.Feed{}, false)
+	return searchHeadline(c, elasticQuery, []string{}, []models.Feed{}, false)
 }
