@@ -171,6 +171,28 @@ type DatabaseResponse struct {
 	Data  interface{} `json:"data"`
 }
 
+func searchESMediaDatabase(c context.Context, elasticQuery interface{}) (interface{}, int, int, error) {
+	hits, err := elasticMediaDatabase.QueryStruct(c, elasticQuery)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return nil, 0, 0, err
+	}
+
+	contactHits := hits.Hits
+
+	if len(contactHits) == 0 {
+		log.Infof(c, "%v", hits)
+		return nil, 0, 0, errors.New("No media database contacts")
+	}
+
+	var interfaceSlice = make([]interface{}, len(contactHits))
+
+	for i := 0; i < len(contactHits); i++ {
+		interfaceSlice[i] = contactHits[i].Source.Data
+	}
+
+	return interfaceSlice, len(contactHits), hits.Total, nil
+}
 func searchESContactsDatabase(c context.Context, elasticQuery elastic.ElasticQuery) (interface{}, int, int, error) {
 	hits, err := elasticContactDatabase.QueryStruct(c, elasticQuery)
 	if err != nil {
@@ -294,6 +316,17 @@ func SearchContactInMediaDatabase(c context.Context, r *http.Request, email stri
 	}
 
 	return enhanceResponse, nil
+}
+
+func SearchESMediaDatabase(c context.Context, r *http.Request) (interface{}, int, int, error) {
+	offset := gcontext.Get(r, "offset").(int)
+	limit := gcontext.Get(r, "limit").(int)
+
+	elasticQuery := elastic.ElasticQuery{}
+	elasticQuery.Size = limit
+	elasticQuery.From = offset
+
+	return searchESMediaDatabase(c, elasticQuery)
 }
 
 func SearchESContactsDatabase(c context.Context, r *http.Request) (interface{}, int, int, error) {
