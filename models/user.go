@@ -101,8 +101,10 @@ type User struct {
 
 	PromoCode string `json:"-"`
 
-	IsAdmin  bool `json:"-"`
-	IsActive bool `json:"isactive"`
+	IsAdmin bool `json:"-"`
+
+	IsActive            bool `json:"isactive"`
+	MediaDatabaseAccess bool `json:"mediadatabaseaccess"`
 
 	TrialFeedback bool `json:"trialfeedback"`
 
