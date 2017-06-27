@@ -59,13 +59,13 @@
                                 {{ .csrfField }}
                                 <input type="hidden" id="code" name="code" />
                                 <input type="hidden" class="duration" id="duration" name="duration" value="annually">
-                                <button type="submit" class="btn btn-primary" name="plan" id="plan" value="bronze">
+                                <button type="submit" class="btn btn-primary" name="plan" id="plan" value="personal">
                                   Purchase this plan
                                 </button>
                             </form>
                             <div class="price">
                                 <div id="personalPackage" {{if eq .currentUserPlan "Personal" }} class="color-bg" {{end}}>
-                                    <h2><span class="sign">$</span><span id="personalPrice">7.99</span> <span class="month">/month</span></h2>
+                                    <h2><span class="sign">$</span><span id="personalPrice">15.99</span> <span class="month">/month</span></h2>
                                 </div>
                             </div>
                             <ul class="package-feature">
@@ -88,13 +88,13 @@
                                 {{ .csrfField }}
                                 <input type="hidden" id="code" name="code" />
                                 <input type="hidden" class="duration" id="duration" name="duration" value="annually">
-                                <button type="submit" class="btn btn-primary" name="plan" id="plan" value="aluminum">
+                                <button type="submit" class="btn btn-primary" name="plan" id="plan" value="consultant">
                                   Purchase this plan
                                 </button>
                             </form>
                             <div class="price">
                                 <div id="consultantPackage" {{if eq .currentUserPlan "Consultant" }} class="color-bg" {{end}}>
-                                    <h2><span class="sign">$</span><span id="consultantPrice">15.99</span> <span class="month">/month</span></h2>
+                                    <h2><span class="sign">$</span><span id="consultantPrice">28.99</span> <span class="month">/month</span></h2>
                                 </div>
                             </div>
                             <ul class="package-feature">
@@ -112,13 +112,13 @@
                                 {{ .csrfField }}
                                 <input type="hidden" id="code" name="code" />
                                 <input type="hidden" class="duration" id="duration" name="duration" value="annually">
-                                <button type="submit" class="btn btn-primary" name="plan" id="plan" value="silver-1">
+                                <button type="submit" class="btn btn-primary" name="plan" id="plan" value="business">
                                   Purchase this plan
                                 </button>
                             </form>
                             <div class="price">
                                 <div id="businessPackage" {{if eq .currentUserPlan "Business" }} class="color-bg" {{end}}>
-                                    <h2><span class="sign">$</span><span id="businessPrice">29.99</span> <span class="month">/month</span></h2>
+                                    <h2><span class="sign">$</span><span id="businessPrice">34.99</span> <span class="month">/month</span></h2>
                                 </div>
                             </div>
                             <ul class="package-feature">
@@ -137,7 +137,7 @@
                                 {{ .csrfField }}
                                 <input type="hidden" id="code" name="code" />
                                 <input type="hidden" class="duration" id="duration" name="duration" value="annually">
-                                <button type="submit" class="btn btn-primary" name="plan" id="plan" value="gold-1">
+                                <button type="submit" class="btn btn-primary" name="plan" id="plan" value="growing">
                                   Purchase this plan
                                 </button>
                             </form>
@@ -148,7 +148,7 @@
                             </div>
                             <ul class="package-feature">
                                 <b>Includes everything in Business +</b>
-                                <li>Send upto 5,000 emails per day</li>
+                                <li>Send upto 2,500 emails per day</li>
                                 <li>Send emails from 10 email addresses</li>
                                 <li>Unlimited contacts integrated with social media</li>
                                 <li>Priority support</li>

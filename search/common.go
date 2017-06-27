@@ -214,7 +214,7 @@ func InitializeElasticSearch() {
 	tweetElastic := elastic.Elastic{}
 	tweetElastic.BaseURL = NewBaseURL
 	tweetElastic.Index = "tweets"
-	tweetElastic.Type = "tweet"
+	tweetElastic.Type = "tweet,md-tweet"
 	elasticTweet = &tweetElastic
 
 	twitterUserElastic := elastic.Elastic{}

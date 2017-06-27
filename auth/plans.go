@@ -153,13 +153,13 @@ func CancelPlanPageHandler() http.HandlerFunc {
 		// If the user has a billing profile
 		if err == nil {
 			switch userBilling.StripePlanId {
-			case "bronze":
+			case "personal":
 				userBilling.StripePlanId = "Personal"
-			case "aluminum":
+			case "consultant":
 				userBilling.StripePlanId = "Consultant"
-			case "silver-1":
+			case "business":
 				userBilling.StripePlanId = "Business"
-			case "gold-1":
+			case "growing":
 				userBilling.StripePlanId = "Growing Business"
 			}
 
@@ -220,13 +220,13 @@ func CancelPlanHandler() http.HandlerFunc {
 		if err == nil {
 			plan := ""
 			switch userBilling.StripePlanId {
-			case "bronze":
+			case "personal":
 				plan = "Personal"
-			case "aluminum":
+			case "consultant":
 				plan = "Consultant"
-			case "silver-1":
+			case "business":
 				plan = "Business"
-			case "gold-1":
+			case "growing":
 				plan = "Growing Business"
 			}
 
@@ -335,13 +335,13 @@ func ChooseSwitchPlanHandler() http.HandlerFunc {
 		if err == nil {
 			originalPlan := plan
 			switch plan {
-			case "bronze":
+			case "personal":
 				plan = "Personal"
-			case "aluminum":
+			case "consultant":
 				plan = "Consultant"
-			case "silver-1":
+			case "business":
 				plan = "Business"
-			case "gold-1":
+			case "growing":
 				plan = "Growing Business"
 			}
 
@@ -408,13 +408,13 @@ func ChoosePlanHandler() http.HandlerFunc {
 		// If the user has a billing profile
 		if err == nil {
 			switch plan {
-			case "bronze":
+			case "personal":
 				plan = "Personal"
-			case "aluminum":
+			case "consultant":
 				plan = "Consultant"
-			case "silver-1":
+			case "business":
 				plan = "Business"
-			case "gold-1":
+			case "growing":
 				plan = "Growing Business"
 			}
 
@@ -537,13 +537,13 @@ func ConfirmPlanHandler() http.HandlerFunc {
 			originalPlan := plan
 			switch plan {
 			case "Personal":
-				plan = "bronze"
+				plan = "personal"
 			case "Consultant":
-				plan = "aluminum"
+				plan = "consultant"
 			case "Business":
-				plan = "silver-1"
+				plan = "business"
 			case "Growing Business":
-				plan = "gold-1"
+				plan = "growing"
 			}
 
 			err = billing.AddPlanToUser(r, user, &userBilling, plan, duration, coupon, originalPlan)
@@ -604,13 +604,13 @@ func BillingPageHandler() http.HandlerFunc {
 		// If the user has a billing profile
 		if err == nil {
 			switch userBilling.StripePlanId {
-			case "bronze":
+			case "bronze", "personal":
 				userBilling.StripePlanId = "Personal"
-			case "aluminum":
+			case "aluminum", "consultant":
 				userBilling.StripePlanId = "Consultant"
-			case "silver-1", "silver":
+			case "silver-1", "silver", "business":
 				userBilling.StripePlanId = "Business"
-			case "gold-1", "gold":
+			case "gold-1", "gold", "growing":
 				userBilling.StripePlanId = "Growing Business"
 			}
 

@@ -59,10 +59,10 @@ function changePricingClass() {
         document.getElementById("annuallyLabel").className = "";
 
         // Update prices
-        document.getElementById("personalPrice").innerHTML = "9.99";
-        document.getElementById("consultantPrice").innerHTML = "18.99";
-        document.getElementById("businessPrice").innerHTML = "35.99";
-        document.getElementById("ultimatePrice").innerHTML = "54.99";
+        document.getElementById("personalPrice").innerHTML = "18.99";
+        document.getElementById("consultantPrice").innerHTML = "34.99";
+        document.getElementById("businessPrice").innerHTML = "41.99";
+        document.getElementById("ultimatePrice").innerHTML = "52.99";
 
         $('.duration').attr('value', 'monthly');
     } else {
@@ -72,9 +72,9 @@ function changePricingClass() {
         document.getElementById("annuallyLabel").className = "active";
 
         // Update prices
-        document.getElementById("personalPrice").innerHTML = "7.99";
-        document.getElementById("consultantPrice").innerHTML = "15.99";
-        document.getElementById("businessPrice").innerHTML = "29.99";
+        document.getElementById("personalPrice").innerHTML = "15.99";
+        document.getElementById("consultantPrice").innerHTML = "28.99";
+        document.getElementById("businessPrice").innerHTML = "34.99";
         document.getElementById("ultimatePrice").innerHTML = "43.99";
 
         $('.duration').attr('value', 'annually');

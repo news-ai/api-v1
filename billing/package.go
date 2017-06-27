@@ -2,13 +2,13 @@ package billing
 
 func BillingIdToPlanName(plan string) string {
 	switch plan {
-	case "bronze": // now "Personal"
+	case "bronze", "personal": // now "Personal"
 		return "Personal"
-	case "aluminum": // now "Consultant"
+	case "aluminum", "consultant": // now "Consultant"
 		return "Consultant"
-	case "silver", "silver-1": // now "Business"
+	case "silver", "silver-1", "business": // now "Business"
 		return "Business"
-	case "gold", "gold-1": // now "Growing Business"
+	case "gold", "gold-1", "growing": // now "Growing Business"
 		return "Growing Business"
 	}
 
@@ -54,7 +54,7 @@ func UserMaximumEmailSent(plan string) int {
 	case "Business": // now "Business"
 		return 1000
 	case "Growing Business": // now "Growing Business"
-		return 5000
+		return 2500
 	}
 
 	return 0
