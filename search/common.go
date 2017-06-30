@@ -5,7 +5,7 @@ import (
 )
 
 var (
-	NewBaseURL = "https://search1.newsai.org"
+	NewBaseURL = "https://search.newsai.org"
 )
 
 type ElasticMGetQuery struct {
@@ -244,7 +244,7 @@ func InitializeElasticSearch() {
 	feedElastic := elastic.Elastic{}
 	feedElastic.BaseURL = NewBaseURL
 	feedElastic.Index = "feeds"
-	feedElastic.Type = "feed"
+	feedElastic.Type = "feed,md-feed"
 	elasticFeed = &feedElastic
 
 	instagramElastic := elastic.Elastic{}
