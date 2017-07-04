@@ -166,6 +166,30 @@ type EnhanceFullContactCompanyResponse struct {
 	} `json:"data"`
 }
 
+type EnhanceEmailVerificationResponse struct {
+	Data struct {
+		Status    int    `json:"status"`
+		RequestID string `json:"requestId"`
+		Emails    []struct {
+			Message    string `json:"message"`
+			Address    string `json:"address"`
+			Username   string `json:"username"`
+			Domain     string `json:"domain"`
+			Corrected  bool   `json:"corrected"`
+			Attributes struct {
+				ValidSyntax bool `json:"validSyntax"`
+				Deliverable bool `json:"deliverable"`
+				Catchall    bool `json:"catchall"`
+				Risky       bool `json:"risky"`
+				Disposable  bool `json:"disposable"`
+			} `json:"attributes"`
+			Person     string `json:"person"`
+			Company    string `json:"company"`
+			SendSafely bool   `json:"sendSafely"`
+		} `json:"emails"`
+	} `json:"data"`
+}
+
 type DatabaseResponse struct {
 	Email string      `json:"email"`
 	Data  interface{} `json:"data"`
@@ -214,6 +238,28 @@ func searchESContactsDatabase(c context.Context, elasticQuery elastic.ElasticQue
 	return contacts, len(contactHits), hits.Total, nil
 }
 
+func SearchEnhanceForEmailVerification(c context.Context, r *http.Request, email string) (EnhanceEmailVerificationResponse, error) {
+	contextWithTimeout, _ := context.WithTimeout(c, time.Second*15)
+	client := urlfetch.Client(contextWithTimeout)
+	getUrl := "https://enhance.newsai.org/verify/" + email
+
+	req, _ := http.NewRequest("GET", getUrl, nil)
+
+	resp, err := client.Do(req)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return EnhanceEmailVerificationResponse{}, err
+	}
+
+	var enhanceResponse EnhanceEmailVerificationResponse
+	err = json.NewDecoder(resp.Body).Decode(&enhanceResponse)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return EnhanceEmailVerificationResponse{}, err
+	}
+
+	return enhanceResponse, nil
+}
 func SearchCompanyDatabase(c context.Context, r *http.Request, url string) (EnhanceFullContactCompanyResponse, error) {
 	contextWithTimeout, _ := context.WithTimeout(c, time.Second*15)
 	client := urlfetch.Client(contextWithTimeout)
