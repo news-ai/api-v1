@@ -368,9 +368,14 @@ func SearchESMediaDatabase(c context.Context, r *http.Request) (interface{}, int
 	offset := gcontext.Get(r, "offset").(int)
 	limit := gcontext.Get(r, "limit").(int)
 
-	elasticQuery := elastic.ElasticQuery{}
+	elasticQuery := elastic.ElasticQueryWithSort{}
 	elasticQuery.Size = limit
 	elasticQuery.From = offset
+
+	elasticCreatedQuery := ElasticSortDataCreatedLowerQuery{}
+	elasticCreatedQuery.DataCreated.Order = "desc"
+	elasticCreatedQuery.DataCreated.Mode = "avg"
+	elasticQuery.Sort = append(elasticQuery.Sort, elasticCreatedQuery)
 
 	return searchESMediaDatabase(c, elasticQuery)
 }

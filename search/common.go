@@ -196,6 +196,13 @@ type ElasticSortDataCreatedAtQuery struct {
 	} `json:"data.CreatedAt"`
 }
 
+type ElasticSortDataCreatedLowerQuery struct {
+	DataCreated struct {
+		Order string `json:"order"`
+		Mode  string `json:"mode"`
+	} `json:"data.created"`
+}
+
 type ElasticSortDataCreatedQuery struct {
 	DataCreated struct {
 		Order string `json:"order"`
