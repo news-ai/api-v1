@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/mail"
+	"strconv"
 	"strings"
 	"time"
 
@@ -967,6 +968,58 @@ func UpdateUser(c context.Context, r *http.Request, id string) (models.User, int
 /*
 * Action methods
  */
+
+func GetAndRefreshLiveToken(c context.Context, r *http.Request, id string) (interface{}, interface{}, error) {
+	user := models.User{}
+	err := errors.New("")
+
+	switch id {
+	case "me":
+		user, err = GetCurrentUser(c, r)
+		if err != nil {
+			log.Errorf(c, "%v", err)
+			return models.User{}, nil, err
+		}
+	default:
+		userId, err := utilities.StringIdToInt(id)
+		if err != nil {
+			log.Errorf(c, "%v", err)
+			return models.User{}, nil, err
+		}
+		user, err = getUser(c, r, userId)
+		if err != nil {
+			log.Errorf(c, "%v", err)
+			return models.User{}, nil, err
+		}
+	}
+
+	currentUser, err := GetCurrentUser(c, r)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return models.User{}, nil, err
+	}
+
+	if !permissions.AccessToObject(user.Id, currentUser.Id) && !currentUser.IsAdmin {
+		err = errors.New("Forbidden")
+		log.Errorf(c, "%v", err)
+		return models.User{}, nil, err
+	}
+
+	token := models.UserLiveToken{}
+	if user.LiveAccessTokenExpire.Before(time.Now()) {
+		randomString := strconv.FormatInt(user.Id, 10)
+		randomString = randomString + utilities.RandToken()
+		user.LiveAccessToken = randomString
+		user.LiveAccessTokenExpire = time.Now().Local().Add(time.Hour*time.Duration(0) +
+			time.Minute*time.Duration(20) +
+			time.Second*time.Duration(0))
+		SaveUser(c, r, &user)
+	}
+
+	token.Token = user.LiveAccessToken
+	token.Expires = user.LiveAccessTokenExpire
+	return token, nil, nil
+}
 
 func ValidateUserPassword(r *http.Request, email string, password string) (models.User, bool, error) {
 	c := appengine.NewContext(r)

@@ -29,6 +29,11 @@ type UserNewPlan struct {
 	Coupon   string `json:"coupon"`
 }
 
+type UserLiveToken struct {
+	Token   string    `json:"token"`
+	Expires time.Time `json:"expires"`
+}
+
 type User struct {
 	Base
 
@@ -89,6 +94,10 @@ type User struct {
 	OutlookExpiresIn    time.Time `json:"-"`
 	OutlookRefreshToken string    `json:"-"`
 	OutlookTokenType    string    `json:"-"`
+
+	// Access Token for Live Notifications
+	LiveAccessToken       string    `json:"-"`
+	LiveAccessTokenExpire time.Time `json:"-"`
 
 	ExternalEmail bool  `json:"externalemail"`
 	EmailSetting  int64 `json:"emailsetting"`

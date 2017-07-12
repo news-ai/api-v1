@@ -28,6 +28,8 @@ func handleUserActions(c context.Context, r *http.Request, id string, action str
 		switch action {
 		case "token":
 			return notifications.GetUserToken(c, r)
+		case "live-token":
+			return api.BaseSingleResponseHandler(controllers.GetAndRefreshLiveToken(c, r, id))
 		case "confirm-email":
 			return api.BaseSingleResponseHandler(controllers.ConfirmAddEmailToUser(c, r, id))
 		case "plan-details":
