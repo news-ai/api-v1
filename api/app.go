@@ -281,6 +281,7 @@ func init() {
 	// Tasks needing to not have middleware
 	http.HandleFunc("/.well-known/acme-challenge/ZCLfT3oIOdBK0iUF28viK2IEvmjJ46_8NzBEE0F6jxA", apiTasks.LetsEncryptValidation)
 	http.HandleFunc("/tasks/sendSchedueleEmails", schedule.SchedueleEmailTask)
+	http.HandleFunc("/tasks/refreshUserLiveTokens", apiTasks.RefreshUserLiveTokens)
 	http.HandleFunc("/tasks/makeUsersInactive", apiTasks.MakeUsersInactive)
 	http.HandleFunc("/tasks/removeExpiredSessions", gaeTasks.RemoveExpiredSessionsHandler)
 	http.HandleFunc("/tasks/removeImportedFiles", tabulaeTasks.RemoveImportedFilesHandler)

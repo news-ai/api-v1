@@ -2,6 +2,7 @@ package tasks
 
 import (
 	"net/http"
+	"strconv"
 	"time"
 
 	"google.golang.org/appengine"
@@ -12,7 +13,32 @@ import (
 	"github.com/news-ai/tabulae/sync"
 
 	"github.com/news-ai/web/errors"
+	"github.com/news-ai/web/utilities"
 )
+
+func RefreshUserLiveTokens(w http.ResponseWriter, r *http.Request) {
+	c := appengine.NewContext(r)
+
+	// Get users who's live tokens are going to expire in the next 10 minutes
+	users, err := controllers.GetUsersUnauthorized(c, r)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		errors.ReturnError(w, http.StatusInternalServerError, "Could not get users", err.Error())
+		return
+	}
+
+	for i := 0; i < len(users); i++ {
+		if users[i].LiveAccessTokenExpire.Before(time.Now()) {
+			randomString := strconv.FormatInt(users[i].Id, 10)
+			randomString = randomString + utilities.RandToken()
+			users[i].LiveAccessToken = randomString
+			users[i].LiveAccessTokenExpire = time.Now().Local().Add(time.Hour*time.Duration(6) +
+				time.Minute*time.Duration(0) +
+				time.Second*time.Duration(0))
+			controllers.SaveUser(c, r, &users[i])
+		}
+	}
+}
 
 func MakeUsersInactive(w http.ResponseWriter, r *http.Request) {
 	c := appengine.NewContext(r)

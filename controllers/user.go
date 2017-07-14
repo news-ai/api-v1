@@ -5,7 +5,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/mail"
-	"strconv"
 	"strings"
 	"time"
 
@@ -1006,16 +1005,6 @@ func GetAndRefreshLiveToken(c context.Context, r *http.Request, id string) (inte
 	}
 
 	token := models.UserLiveToken{}
-	if user.LiveAccessTokenExpire.Before(time.Now()) {
-		randomString := strconv.FormatInt(user.Id, 10)
-		randomString = randomString + utilities.RandToken()
-		user.LiveAccessToken = randomString
-		user.LiveAccessTokenExpire = time.Now().Local().Add(time.Hour*time.Duration(0) +
-			time.Minute*time.Duration(20) +
-			time.Second*time.Duration(0))
-		SaveUser(c, r, &user)
-	}
-
 	token.Token = user.LiveAccessToken
 	token.Expires = user.LiveAccessTokenExpire
 	return token, nil, nil

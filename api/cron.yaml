@@ -11,6 +11,10 @@ cron:
   url: /tasks/makeUsersInactive
   schedule: every 12 hours
   target: default
+- description: "refresh user live tokens"
+  url: /tasks/refreshUserLiveTokens
+  schedule: every 6 hours
+  target: default
 - description: "send emails"
   url: /tasks/sendSchedueleEmails
   schedule: every 1 minutes
