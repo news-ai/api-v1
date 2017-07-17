@@ -18,7 +18,12 @@ type UserFeedback struct {
 }
 
 type UserPlan struct {
-	EmailAccounts int `json:"emailaccounts"`
+	PlanName string `json:"planname"`
+
+	EmailAccounts      int `json:"emailaccounts"`
+	DailyEmailsAllowed int `json:"dailyemailsallowed"`
+
+	EmailsSentToday int `json:"emailssenttoday"`
 
 	OnTrial bool `json:"ontrial"`
 }

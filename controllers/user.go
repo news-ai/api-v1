@@ -637,6 +637,20 @@ func RemoveEmailFromUser(c context.Context, r *http.Request, id string) (models.
 	return user, nil, nil
 }
 
+func GetUserDailyEmail(c context.Context, r *http.Request, user models.User) int {
+	t := time.Now()
+	todayDateMorning := time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, time.Local)
+	todayDateNight := time.Date(t.Year(), t.Month(), t.Day(), 23, 59, 59, 59, time.Local)
+
+	emailsSent, err := datastore.NewQuery("Email").Filter("CreatedBy =", user.Id).Filter("IsSent =", true).Filter("Cancel =", false).Filter("Created <=", todayDateNight).Filter("Created >=", todayDateMorning).KeysOnly().GetAll(c, nil)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return 0
+	}
+
+	return len(emailsSent)
+}
+
 func GetUserPlanDetails(c context.Context, r *http.Request, id string) (models.UserPlan, interface{}, error) {
 	user := models.User{}
 	err := errors.New("")
@@ -680,8 +694,11 @@ func GetUserPlanDetails(c context.Context, r *http.Request, id string) (models.U
 
 	userPlan := models.UserPlan{}
 	userPlanName := billing.BillingIdToPlanName(userBilling.StripePlanId)
+	userPlan.PlanName = userPlanName
 	userPlan.EmailAccounts = billing.UserMaximumEmailAccounts(userPlanName)
 	userPlan.OnTrial = userBilling.IsOnTrial
+	userPlan.DailyEmailsAllowed = billing.StripePlanIdToMaximumEmailSent(userBilling.StripePlanId)
+	userPlan.EmailsSentToday = GetUserDailyEmail(c, r, user)
 
 	return userPlan, nil, nil
 }

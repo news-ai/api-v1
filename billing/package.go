@@ -10,6 +10,8 @@ func BillingIdToPlanName(plan string) string {
 		return "Business"
 	case "gold", "gold-1", "growing": // now "Growing Business"
 		return "Growing Business"
+	case "free":
+		return "Trial Member"
 	}
 
 	return "Personal"
@@ -58,4 +60,13 @@ func UserMaximumEmailSent(plan string) int {
 	}
 
 	return 0
+}
+
+func StripePlanIdToMaximumEmailSent(stripePlanId string) int {
+	switch stripePlanId {
+	case "free": // now "Personal"
+		return 100
+	}
+
+	return 10000
 }
