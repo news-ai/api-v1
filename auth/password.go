@@ -208,6 +208,12 @@ func PasswordRegisterHandler() http.HandlerFunc {
 			return
 		}
 
+		if strings.Contains(email, "@qiq.us") || strings.Contains(email, "@10vpn.info") {
+			invalidEmailAlert := url.QueryEscape("Validation failed on registration. Sorry about that!")
+			http.Redirect(w, r, "/api/auth?success=false&message="+invalidEmailAlert, 302)
+			return
+		}
+
 		invitedBy := int64(0)
 
 		// At some point we can make the invitationCode required
