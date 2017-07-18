@@ -985,6 +985,48 @@ func UpdateUser(c context.Context, r *http.Request, id string) (models.User, int
 * Action methods
  */
 
+func BanUser(c context.Context, r *http.Request, id string) (models.User, interface{}, error) {
+	user := models.User{}
+	err := errors.New("")
+
+	switch id {
+	case "me":
+		user, err = GetCurrentUser(c, r)
+		if err != nil {
+			log.Errorf(c, "%v", err)
+			return models.User{}, nil, err
+		}
+	default:
+		userId, err := utilities.StringIdToInt(id)
+		if err != nil {
+			log.Errorf(c, "%v", err)
+			return models.User{}, nil, err
+		}
+		user, err = getUser(c, r, userId)
+		if err != nil {
+			log.Errorf(c, "%v", err)
+			return models.User{}, nil, err
+		}
+	}
+
+	currentUser, err := GetCurrentUser(c, r)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return models.User{}, nil, err
+	}
+
+	if !permissions.AccessToObject(user.Id, currentUser.Id) && !currentUser.IsAdmin {
+		err = errors.New("Forbidden")
+		log.Errorf(c, "%v", err)
+		return models.User{}, nil, err
+	}
+
+	user.IsActive = false
+	user.IsBanned = true
+	SaveUser(c, r, &user)
+	return user, nil, nil
+}
+
 func GetAndRefreshLiveToken(c context.Context, r *http.Request, id string) (interface{}, interface{}, error) {
 	user := models.User{}
 	err := errors.New("")

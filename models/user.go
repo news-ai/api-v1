@@ -52,7 +52,7 @@ type User struct {
 
 	EmailProvider string `json:"emailprovider" datastore:"-"`
 
-	EmailAlias string `json:"emailalias"`
+	EmailAlias string `json:"-"`
 
 	Password []byte `json:"-"`
 	ApiKey   string `json:"-"`
@@ -69,7 +69,7 @@ type User struct {
 	LinkedinId      string `json:"-"`
 	LinkedinAuthKey string `json:"-"`
 
-	InstagramId      string `json:"instagramid"`
+	InstagramId      string `json:"-"`
 	InstagramAuthKey string `json:"-"`
 
 	InvitedBy int64 `json:"-"`
@@ -123,10 +123,10 @@ type User struct {
 
 	TrialFeedback bool `json:"trialfeedback"`
 
-	Type    string `json:"type"` // Journalist or PR
-	Profile int64  `json:"userprofile"`
+	Type    string `json:"-"` // Journalist or PR
+	Profile int64  `json:"-"`
 
-	EnhanceCredits int `json:"enhancecredits"`
+	EnhanceCredits int `json:"-"`
 }
 
 /*

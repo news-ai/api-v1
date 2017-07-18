@@ -39,6 +39,8 @@ func handleUserActions(c context.Context, r *http.Request, id string, action str
 			return api.BaseResponseHandler(val, included, count, total, err, r)
 		case "profile":
 			return api.BaseSingleResponseHandler(pitchControllers.GetUserProfile(c, r, id))
+		case "ban":
+			return api.BaseSingleResponseHandler(controllers.BanUser(c, r, id))
 		}
 	case "POST":
 		switch action {
