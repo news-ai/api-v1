@@ -17,9 +17,15 @@ $(function () {
      // Checking password
     var instance = $('form').parsley();
     $('form').on('submit', function(){
-        if (instance.isValid()) {
-            $('#registrationButton').attr('disabled', 'disabled');
-            return true;
+        var recaptcha = $("#g-recaptcha-response").val();
+        if (recaptcha === "") {
+            event.preventDefault();
+            alert("Please check the recaptcha");
+        } else {
+            if (instance.isValid()) {
+                $('#registrationButton').attr('disabled', 'disabled');
+                return true;
+            }
         }
         return false;
     });

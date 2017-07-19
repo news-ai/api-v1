@@ -13,7 +13,7 @@ import (
 	apiControllers "github.com/news-ai/api/controllers"
 	apiModels "github.com/news-ai/api/models"
 
-	"github.com/news-ai/tabulae/controllers"
+	// "github.com/news-ai/tabulae/controllers"
 	"github.com/news-ai/tabulae/emails"
 
 	"github.com/news-ai/web/utilities"
@@ -197,6 +197,18 @@ func PasswordRegisterHandler() http.HandlerFunc {
 		password := r.FormValue("password")
 		invitationCode := r.FormValue("invitationcode")
 		promoCode := r.FormValue("couponcode")
+		recaptcha := r.FormValue("g-recaptcha-response")
+
+		// Validate reCaptcha
+
+		/*
+			Response:
+			{
+				"success": true,
+				"challenge_ts": "2017-07-19T01:19:19Z",
+				"hostname": "localhost"
+			}
+		*/
 
 		email = strings.ToLower(email)
 
@@ -244,31 +256,31 @@ func PasswordRegisterHandler() http.HandlerFunc {
 		user.IsActive = false
 		user.PromoCode = promoCode
 
-		// Register user
-		_, isOk, err := controllers.RegisterUser(r, user)
+		// // Register user
+		// _, isOk, err := controllers.RegisterUser(r, user)
 
-		if !isOk && err != nil {
-			// Redirect user back to login page
-			emailRegistered := url.QueryEscape("Email has already been registered")
-			http.Redirect(w, r, "/api/auth?success=false&message="+emailRegistered, 302)
-			return
-		}
+		// if !isOk && err != nil {
+		// 	// Redirect user back to login page
+		// 	emailRegistered := url.QueryEscape("Email has already been registered")
+		// 	http.Redirect(w, r, "/api/auth?success=false&message="+emailRegistered, 302)
+		// 	return
+		// }
 
-		// Email could fail to send if there is no singleUser. Create check later.
-		confirmErr := emails.ConfirmUserAccount(c, user, user.ConfirmationCode)
-		if confirmErr != nil {
-			// Redirect user back to login page
-			log.Errorf(c, "%v", "Confirmation email was not sent for "+email)
-			log.Errorf(c, "%v", confirmErr)
-			emailRegistered := url.QueryEscape("Could not send confirmation email. We'll fix this soon!")
-			http.Redirect(w, r, "/api/auth?success=false&message="+emailRegistered, 302)
-			return
-		}
+		// // Email could fail to send if there is no singleUser. Create check later.
+		// confirmErr := emails.ConfirmUserAccount(c, user, user.ConfirmationCode)
+		// if confirmErr != nil {
+		// 	// Redirect user back to login page
+		// 	log.Errorf(c, "%v", "Confirmation email was not sent for "+email)
+		// 	log.Errorf(c, "%v", confirmErr)
+		// 	emailRegistered := url.QueryEscape("Could not send confirmation email. We'll fix this soon!")
+		// 	http.Redirect(w, r, "/api/auth?success=false&message="+emailRegistered, 302)
+		// 	return
+		// }
 
-		// Redirect user back to login page
-		confirmationMessage := url.QueryEscape("We sent you a confirmation email!")
-		http.Redirect(w, r, "/api/auth?success=true&message="+confirmationMessage, 302)
-		return
+		// // Redirect user back to login page
+		// confirmationMessage := url.QueryEscape("We sent you a confirmation email!")
+		// http.Redirect(w, r, "/api/auth?success=true&message="+confirmationMessage, 302)
+		// return
 	}
 }
 

@@ -31,6 +31,7 @@
 
     <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
     <script>(function(){var w=window;var ic=w.Intercom;if(typeof ic==="function"){ic('reattach_activator');ic('update',intercomSettings);}else{var d=document;var i=function(){i.c(arguments)};i.q=[];i.c=function(args){i.q.push(args)};w.Intercom=i;function l(){var s=d.createElement('script');s.type='text/javascript';s.async=true;s.src='https://widget.intercom.io/widget/ur8dbk9e';var x=d.getElementsByTagName('script')[0];x.parentNode.insertBefore(s,x);}if(w.attachEvent){w.attachEvent('onload',l);}else{w.addEventListener('load',l,false);}}})()</script>
+    <script src='https://www.google.com/recaptcha/api.js'></script>
 </head>
 
 <body class="grey-bg">
@@ -72,12 +73,17 @@
                         </span>
                     </div>
                     <div class="col-xs-8 col-sm-9 col-md-9">
-                         By clicking <strong class="label label-primary">Register</strong>, you agree to the <a href="#" data-toggle="modal" data-target="#t_and_c_m">Terms and Conditions</a> set out by this site, including our Cookie Use.
+                         By clicking <strong class="label label-primary">Start My Trial</strong>, you agree to the <a href="#" data-toggle="modal" data-target="#t_and_c_m">Terms and Conditions</a> set out by this site, including our Cookie Use.
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-xs-4 col-sm-3 col-md-3">
+                        <div tabindex="7" class="g-recaptcha" name="recaptcha" id="recaptcha" data-sitekey="6Ld7pigTAAAAAG9hKcodbx5qxI7CHNo46uKSVLCL"></div>
                     </div>
                 </div>
                 <hr class="colorgraph">
                 <div class="row">
-                    <div style="max-width: 50%; margin: 0 auto;"><input id="registrationButton" type="submit" style="background-color: #428bca; border-color: #428bca;" value="Start my trial" class="btn btn-primary btn-block btn-lg" tabindex="6"></div>
+                    <div style="max-width: 50%; margin: 0 auto;"><input id="registrationButton" type="submit" style="background-color: #428bca; border-color: #428bca;" value="Start my trial" class="btn btn-primary btn-block btn-lg" tabindex="8"></div>
                 </div>
             </form>
         </div>

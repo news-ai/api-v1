@@ -55,7 +55,8 @@ func init() {
 	app.Use(c)
 
 	// Initialize CSRF
-	CSRF := csrf.Protect([]byte(os.Getenv("CSRFKEY")))
+	CSRF := csrf.Protect([]byte(os.Getenv("CSRFKEY")), csrf.Secure(false)) // localhost registration
+	// CSRF := csrf.Protect([]byte(os.Getenv("CSRFKEY")))
 
 	// Initialize the environment for a particular URL
 	utils.InitURL()
