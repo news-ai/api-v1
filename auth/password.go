@@ -6,12 +6,16 @@ import (
 	"net/url"
 	"strings"
 	"text/template"
+	"time"
 
 	"google.golang.org/appengine"
 	"google.golang.org/appengine/log"
+	"google.golang.org/appengine/urlfetch"
 
 	apiControllers "github.com/news-ai/api/controllers"
 	apiModels "github.com/news-ai/api/models"
+
+	"golang.org/x/net/context"
 
 	// "github.com/news-ai/tabulae/controllers"
 	"github.com/news-ai/tabulae/emails"
@@ -20,6 +24,12 @@ import (
 
 	"github.com/gorilla/csrf"
 )
+
+type ReCaptchaResponse struct {
+	Status      bool   `json:"status"`
+	ChallengeTs string `json:"challenge_ts"`
+	HostName    stirng `json:"hostname"`
+}
 
 func PasswordLoginHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -199,7 +209,25 @@ func PasswordRegisterHandler() http.HandlerFunc {
 		promoCode := r.FormValue("couponcode")
 		recaptcha := r.FormValue("g-recaptcha-response")
 
+		contextWithTimeout, _ := context.WithTimeout(c, time.Second*15)
+		client := urlfetch.Client(contextWithTimeout)
+
 		// Validate reCaptcha
+		form := url.Values{}
+		form.Add("secret", "6Ld7pigTAAAAADL7Be1BjBr8x6TSs2mMc8aqC4VA")
+		form.Add("response", recaptcha)
+
+		req, err := http.NewRequest("POST", "https://www.google.com/recaptcha/api/siteverify", strings.NewReader(form.Encode()))
+		req.PostForm = form
+		req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+
+		resp, err := client.Do(req)
+		if err != nil {
+			log.Errorf(c, "%v", err)
+			invalidEmailAlert := url.QueryEscape("Recaptcha failed. Please try again, sorry about that!")
+			http.Redirect(w, r, "/api/auth?success=false&message="+invalidEmailAlert, 302)
+			return
+		}
 
 		/*
 			Response:
@@ -209,6 +237,22 @@ func PasswordRegisterHandler() http.HandlerFunc {
 				"hostname": "localhost"
 			}
 		*/
+
+		// Decode JSON from Google
+		decoder := json.NewDecoder(resp.Body)
+		var reCaptchaResponse ReCaptchaResponse
+		err = decoder.Decode(&reCaptchaResponse)
+		if err != nil {
+			log.Errorf(c, "%v", err)
+			return err
+		}
+
+		if !reCaptchaResponse.Status {
+			log.Errorf(c, "%v", reCaptchaResponse)
+			invalidEmailAlert := url.QueryEscape("Recaptcha failed. Please try again, sorry about that!")
+			http.Redirect(w, r, "/api/auth?success=false&message="+invalidEmailAlert, 302)
+			return
+		}
 
 		email = strings.ToLower(email)
 
