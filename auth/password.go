@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"encoding/json"
 	"net/http"
 	"net/mail"
 	"net/url"
@@ -17,7 +18,7 @@ import (
 
 	"golang.org/x/net/context"
 
-	// "github.com/news-ai/tabulae/controllers"
+	"github.com/news-ai/tabulae/controllers"
 	"github.com/news-ai/tabulae/emails"
 
 	"github.com/news-ai/web/utilities"
@@ -26,9 +27,10 @@ import (
 )
 
 type ReCaptchaResponse struct {
-	Status      bool   `json:"status"`
-	ChallengeTs string `json:"challenge_ts"`
-	HostName    stirng `json:"hostname"`
+	Success     bool     `json:"success"`
+	ChallengeTs string   `json:"challenge_ts"`
+	HostName    string   `json:"hostname"`
+	ErrorCodes  []string `json:"error-codes"`
 }
 
 func PasswordLoginHandler() http.HandlerFunc {
@@ -212,16 +214,7 @@ func PasswordRegisterHandler() http.HandlerFunc {
 		contextWithTimeout, _ := context.WithTimeout(c, time.Second*15)
 		client := urlfetch.Client(contextWithTimeout)
 
-		// Validate reCaptcha
-		form := url.Values{}
-		form.Add("secret", "6Ld7pigTAAAAADL7Be1BjBr8x6TSs2mMc8aqC4VA")
-		form.Add("response", recaptcha)
-
-		req, err := http.NewRequest("POST", "https://www.google.com/recaptcha/api/siteverify", strings.NewReader(form.Encode()))
-		req.PostForm = form
-		req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-
-		resp, err := client.Do(req)
+		resp, err := client.PostForm("https://www.google.com/recaptcha/api/siteverify", url.Values{"secret": {"6Ld7pigTAAAAADL7Be1BjBr8x6TSs2mMc8aqC4VA"}, "response": {recaptcha}})
 		if err != nil {
 			log.Errorf(c, "%v", err)
 			invalidEmailAlert := url.QueryEscape("Recaptcha failed. Please try again, sorry about that!")
@@ -244,10 +237,12 @@ func PasswordRegisterHandler() http.HandlerFunc {
 		err = decoder.Decode(&reCaptchaResponse)
 		if err != nil {
 			log.Errorf(c, "%v", err)
-			return err
+			invalidEmailAlert := url.QueryEscape("Recaptcha failed. Please try again, sorry about that!")
+			http.Redirect(w, r, "/api/auth?success=false&message="+invalidEmailAlert, 302)
+			return
 		}
 
-		if !reCaptchaResponse.Status {
+		if !reCaptchaResponse.Success {
 			log.Errorf(c, "%v", reCaptchaResponse)
 			invalidEmailAlert := url.QueryEscape("Recaptcha failed. Please try again, sorry about that!")
 			http.Redirect(w, r, "/api/auth?success=false&message="+invalidEmailAlert, 302)
@@ -300,31 +295,31 @@ func PasswordRegisterHandler() http.HandlerFunc {
 		user.IsActive = false
 		user.PromoCode = promoCode
 
-		// // Register user
-		// _, isOk, err := controllers.RegisterUser(r, user)
+		// Register user
+		_, isOk, err := controllers.RegisterUser(r, user)
 
-		// if !isOk && err != nil {
-		// 	// Redirect user back to login page
-		// 	emailRegistered := url.QueryEscape("Email has already been registered")
-		// 	http.Redirect(w, r, "/api/auth?success=false&message="+emailRegistered, 302)
-		// 	return
-		// }
+		if !isOk && err != nil {
+			// Redirect user back to login page
+			emailRegistered := url.QueryEscape("Email has already been registered")
+			http.Redirect(w, r, "/api/auth?success=false&message="+emailRegistered, 302)
+			return
+		}
 
-		// // Email could fail to send if there is no singleUser. Create check later.
-		// confirmErr := emails.ConfirmUserAccount(c, user, user.ConfirmationCode)
-		// if confirmErr != nil {
-		// 	// Redirect user back to login page
-		// 	log.Errorf(c, "%v", "Confirmation email was not sent for "+email)
-		// 	log.Errorf(c, "%v", confirmErr)
-		// 	emailRegistered := url.QueryEscape("Could not send confirmation email. We'll fix this soon!")
-		// 	http.Redirect(w, r, "/api/auth?success=false&message="+emailRegistered, 302)
-		// 	return
-		// }
+		// Email could fail to send if there is no singleUser. Create check later.
+		confirmErr := emails.ConfirmUserAccount(c, user, user.ConfirmationCode)
+		if confirmErr != nil {
+			// Redirect user back to login page
+			log.Errorf(c, "%v", "Confirmation email was not sent for "+email)
+			log.Errorf(c, "%v", confirmErr)
+			emailRegistered := url.QueryEscape("Could not send confirmation email. We'll fix this soon!")
+			http.Redirect(w, r, "/api/auth?success=false&message="+emailRegistered, 302)
+			return
+		}
 
-		// // Redirect user back to login page
-		// confirmationMessage := url.QueryEscape("We sent you a confirmation email!")
-		// http.Redirect(w, r, "/api/auth?success=true&message="+confirmationMessage, 302)
-		// return
+		// Redirect user back to login page
+		confirmationMessage := url.QueryEscape("We sent you a confirmation email!")
+		http.Redirect(w, r, "/api/auth?success=true&message="+confirmationMessage, 302)
+		return
 	}
 }
 
