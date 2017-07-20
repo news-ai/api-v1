@@ -19,3 +19,12 @@ Indexes:
 Cron:
 
 - `appcfg.py update_cron api/ -A newsai-1166`
+
+Clearbit risk:
+
+```
+curl https://risk.clearbit.com/v1/calculate \
+        -d 'email=bitabidem@10vpn.info' \
+        -d 'ip=103.85.161.6' \
+        -u sk_e571cbd973ecee8874cdbc33559e7480
+```

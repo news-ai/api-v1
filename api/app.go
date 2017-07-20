@@ -205,6 +205,10 @@ func init() {
 	router.DELETE("/api/contacts/:id", tabulaeRoutes.ContactHandler)
 	router.GET("/api/contacts/:id/:action", tabulaeRoutes.ContactActionHandler)
 
+	router.GET("/api/contacts_v2", tabulaeRoutes.ContactsV2Handler)
+	router.POST("/api/contacts_v2", tabulaeRoutes.ContactsV2Handler)
+	router.GET("/api/contacts_v2/:id", tabulaeRoutes.ContactV2Handler)
+
 	router.GET("/api/files", tabulaeRoutes.FilesHandler)
 	router.GET("/api/files/:id", tabulaeRoutes.FileHandler)
 	router.GET("/api/files/:id/:action", tabulaeRoutes.FileActionHandler)

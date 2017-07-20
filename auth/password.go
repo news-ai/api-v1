@@ -26,6 +26,36 @@ import (
 	"github.com/gorilla/csrf"
 )
 
+type ClearBitRiskRequest struct {
+	Email     string `json:"email"`
+	IP        string `json:"ip"`
+	GivenName string `json:"given_name"`
+}
+
+type ClearBitRiskResponse struct {
+	Email struct {
+		Valid        bool `json:"valid"`
+		SocialMatch  bool `json:"socialMatch"`
+		CompanyMatch bool `json:"companyMatch"`
+		NameMatch    bool `json:"nameMatch"`
+		Disposable   bool `json:"disposable"`
+		FreeProvider bool `json:"freeProvider"`
+		Blacklisted  bool `json:"blacklisted"`
+	} `json:"email"`
+	Address struct {
+		GeoMatch interface{} `json:"geoMatch"`
+	} `json:"address"`
+	IP struct {
+		Proxy       interface{} `json:"proxy"`
+		GeoMatch    interface{} `json:"geoMatch"`
+		Blacklisted bool        `json:"blacklisted"`
+	} `json:"ip"`
+	Risk struct {
+		Level string `json:"level"`
+		Score int    `json:"score"`
+	} `json:"risk"`
+}
+
 type ReCaptchaResponse struct {
 	Success     bool     `json:"success"`
 	ChallengeTs string   `json:"challenge_ts"`
@@ -211,6 +241,11 @@ func PasswordRegisterHandler() http.HandlerFunc {
 		promoCode := r.FormValue("couponcode")
 		recaptcha := r.FormValue("g-recaptcha-response")
 
+		/*
+			Verify Google reCaptcha to see
+			if the answer they gave is valid
+		*/
+
 		contextWithTimeout, _ := context.WithTimeout(c, time.Second*15)
 		client := urlfetch.Client(contextWithTimeout)
 
@@ -249,9 +284,8 @@ func PasswordRegisterHandler() http.HandlerFunc {
 			return
 		}
 
-		email = strings.ToLower(email)
-
 		// Validate email
+		email = strings.ToLower(email)
 		validEmail, err := mail.ParseAddress(email)
 		if err != nil || email == "" {
 			invalidEmailAlert := url.QueryEscape("Validation failed on registration. Sorry about that!")
@@ -259,11 +293,33 @@ func PasswordRegisterHandler() http.HandlerFunc {
 			return
 		}
 
-		if strings.Contains(email, "@qiq.us") || strings.Contains(email, "@10vpn.info") {
-			invalidEmailAlert := url.QueryEscape("Validation failed on registration. Sorry about that!")
-			http.Redirect(w, r, "/api/auth?success=false&message="+invalidEmailAlert, 302)
-			return
+		/*
+			Check risk of account creator
+		*/
+
+		clearBitRequest := ClearBitRiskRequest{}
+		clearBitRequest.Email = email
+		clearBitRequest.GivenName = firstName
+		clearBitRequest.IP = r.RemoteAddr
+
+		clearBitRequestJson, err := json.Marshal(clearBitRequest)
+		if err != nil {
+			log.Errorf(c, "%v", err)
+			return err
 		}
+		clearBitRequestByte := bytes.NewReader(clearBitRequestJson)
+
+		postUrl := "https://risk.clearbit.com/v1/calculate"
+		req, _ := http.NewRequest("POST", postUrl, clearBitRequestByte)
+		req.SetBasicAuth("sk_e571cbd973ecee8874cdbc33559e7480", "")
+
+		clearBitResp, err := client.Do(req)
+		if err != nil {
+			log.Errorf(c, "%v", err)
+			return err
+		}
+
+		log.Infof(c, "%v", clearBitRequest)
 
 		invitedBy := int64(0)
 

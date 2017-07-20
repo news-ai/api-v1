@@ -117,6 +117,8 @@ type User struct {
 
 	IsAdmin bool `json:"-"`
 
+	TabulaeV2 bool `json:"tabulaev2"`
+
 	IsActive            bool `json:"isactive"`
 	IsBanned            bool `json:"isbanned"`
 	MediaDatabaseAccess bool `json:"mediadatabaseaccess"`
