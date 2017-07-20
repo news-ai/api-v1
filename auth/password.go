@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"bytes"
 	"encoding/json"
 	"net/http"
 	"net/mail"
@@ -43,12 +44,12 @@ type ClearBitRiskResponse struct {
 		Blacklisted  bool `json:"blacklisted"`
 	} `json:"email"`
 	Address struct {
-		GeoMatch interface{} `json:"geoMatch"`
+		GeoMatch bool `json:"geoMatch"`
 	} `json:"address"`
 	IP struct {
-		Proxy       interface{} `json:"proxy"`
-		GeoMatch    interface{} `json:"geoMatch"`
-		Blacklisted bool        `json:"blacklisted"`
+		Proxy       bool `json:"proxy"`
+		GeoMatch    bool `json:"geoMatch"`
+		Blacklisted bool `json:"blacklisted"`
 	} `json:"ip"`
 	Risk struct {
 		Level string `json:"level"`
@@ -249,39 +250,36 @@ func PasswordRegisterHandler() http.HandlerFunc {
 		contextWithTimeout, _ := context.WithTimeout(c, time.Second*15)
 		client := urlfetch.Client(contextWithTimeout)
 
-		resp, err := client.PostForm("https://www.google.com/recaptcha/api/siteverify", url.Values{"secret": {"6Ld7pigTAAAAADL7Be1BjBr8x6TSs2mMc8aqC4VA"}, "response": {recaptcha}})
-		if err != nil {
-			log.Errorf(c, "%v", err)
-			invalidEmailAlert := url.QueryEscape("Recaptcha failed. Please try again, sorry about that!")
-			http.Redirect(w, r, "/api/auth?success=false&message="+invalidEmailAlert, 302)
-			return
-		}
-
 		/*
-			Response:
-			{
-				"success": true,
-				"challenge_ts": "2017-07-19T01:19:19Z",
-				"hostname": "localhost"
-			}
+			Check if reCaptcha is valid
 		*/
 
-		// Decode JSON from Google
-		decoder := json.NewDecoder(resp.Body)
-		var reCaptchaResponse ReCaptchaResponse
-		err = decoder.Decode(&reCaptchaResponse)
-		if err != nil {
-			log.Errorf(c, "%v", err)
-			invalidEmailAlert := url.QueryEscape("Recaptcha failed. Please try again, sorry about that!")
-			http.Redirect(w, r, "/api/auth?success=false&message="+invalidEmailAlert, 302)
-			return
-		}
+		resp, err := client.PostForm("https://www.google.com/recaptcha/api/siteverify", url.Values{"secret": {"6Ld7pigTAAAAADL7Be1BjBr8x6TSs2mMc8aqC4VA"}, "response": {recaptcha}})
+		if err == nil {
+			/*
+				Response:
+				{
+					"success": true,
+					"challenge_ts": "2017-07-19T01:19:19Z",
+					"hostname": "localhost"
+				}
+			*/
 
-		if !reCaptchaResponse.Success {
-			log.Errorf(c, "%v", reCaptchaResponse)
-			invalidEmailAlert := url.QueryEscape("Recaptcha failed. Please try again, sorry about that!")
-			http.Redirect(w, r, "/api/auth?success=false&message="+invalidEmailAlert, 302)
-			return
+			decoder := json.NewDecoder(resp.Body)
+			var reCaptchaResponse ReCaptchaResponse
+			err = decoder.Decode(&reCaptchaResponse)
+			if err == nil {
+				if !reCaptchaResponse.Success {
+					log.Errorf(c, "%v", reCaptchaResponse)
+					invalidEmailAlert := url.QueryEscape("Recaptcha failed. Please try again, sorry about that!")
+					http.Redirect(w, r, "/api/auth?success=false&message="+invalidEmailAlert, 302)
+					return
+				}
+			} else {
+				log.Errorf(c, "%v", err)
+			}
+		} else {
+			log.Errorf(c, "%v", err)
 		}
 
 		// Validate email
@@ -303,23 +301,30 @@ func PasswordRegisterHandler() http.HandlerFunc {
 		clearBitRequest.IP = r.RemoteAddr
 
 		clearBitRequestJson, err := json.Marshal(clearBitRequest)
-		if err != nil {
+		if err == nil {
+			clearBitRequestByte := bytes.NewReader(clearBitRequestJson)
+
+			postUrl := "https://risk.clearbit.com/v1/calculate"
+			req, _ := http.NewRequest("POST", postUrl, clearBitRequestByte)
+			req.Header.Add("Content-Type", "application/json")
+			req.Header.Add("Authorization", "Bearer sk_e571cbd973ecee8874cdbc33559e7480")
+
+			clearBitResp, err := client.Do(req)
+			if err == nil {
+				var clearBitRiskResponse ClearBitRiskResponse
+				err = json.NewDecoder(clearBitResp.Body).Decode(&clearBitRiskResponse)
+
+				if err == nil {
+					log.Infof(c, "%v", clearBitRiskResponse)
+				} else {
+					log.Errorf(c, "%v", err)
+				}
+			} else {
+				log.Errorf(c, "%v", err)
+			}
+		} else {
 			log.Errorf(c, "%v", err)
-			return err
 		}
-		clearBitRequestByte := bytes.NewReader(clearBitRequestJson)
-
-		postUrl := "https://risk.clearbit.com/v1/calculate"
-		req, _ := http.NewRequest("POST", postUrl, clearBitRequestByte)
-		req.SetBasicAuth("sk_e571cbd973ecee8874cdbc33559e7480", "")
-
-		clearBitResp, err := client.Do(req)
-		if err != nil {
-			log.Errorf(c, "%v", err)
-			return err
-		}
-
-		log.Infof(c, "%v", clearBitRequest)
 
 		invitedBy := int64(0)
 
