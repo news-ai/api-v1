@@ -153,8 +153,6 @@ func init() {
 	// Main billing page for a user
 	router.Handler("GET", "/api/billing", CSRF(auth.BillingPageHandler()))
 
-	router.Handler("GET", "/api/admin", CSRF(auth.AdminPageHandler()))
-
 	/*
 	 * Incoming Handler
 	 */

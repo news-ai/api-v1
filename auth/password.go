@@ -315,6 +315,7 @@ func PasswordRegisterHandler() http.HandlerFunc {
 				err = json.NewDecoder(clearBitResp.Body).Decode(&clearBitRiskResponse)
 
 				if err == nil {
+					log.Infof(c, "%v", clearBitRequest)
 					log.Infof(c, "%v", clearBitRiskResponse)
 				} else {
 					log.Errorf(c, "%v", err)
