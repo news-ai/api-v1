@@ -16,7 +16,6 @@ import (
 	pitchControllers "github.com/news-ai/pitch/controllers"
 
 	tabulaeControllers "github.com/news-ai/tabulae/controllers"
-	"github.com/news-ai/tabulae/notifications"
 
 	"github.com/news-ai/web/api"
 	nError "github.com/news-ai/web/errors"
@@ -26,8 +25,6 @@ func handleUserActions(c context.Context, r *http.Request, id string, action str
 	switch r.Method {
 	case "GET":
 		switch action {
-		case "token":
-			return notifications.GetUserToken(c, r)
 		case "live-token":
 			return api.BaseSingleResponseHandler(controllers.GetAndRefreshLiveToken(c, r, id))
 		case "confirm-email":

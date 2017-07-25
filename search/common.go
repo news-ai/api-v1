@@ -54,6 +54,12 @@ type ElasticCancelQuery struct {
 	} `json:"term"`
 }
 
+type ElasticDelieveredQuery struct {
+	Term struct {
+		Delievered bool `json:"data.Delievered"`
+	} `json:"term"`
+}
+
 type ElasticClientQuery struct {
 	Term struct {
 		Client string `json:"data.Client"`

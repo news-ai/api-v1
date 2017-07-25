@@ -26,7 +26,6 @@ import (
 
 	// Tabulae Imports
 	"github.com/news-ai/tabulae/incoming"
-	"github.com/news-ai/tabulae/notifications"
 	tabulaeRoutes "github.com/news-ai/tabulae/routes"
 	"github.com/news-ai/tabulae/schedule"
 	"github.com/news-ai/tabulae/search"
@@ -245,8 +244,6 @@ func init() {
 	router.GET("/api/feeds/:id", tabulaeRoutes.FeedHandler)
 	router.DELETE("/api/feeds/:id", tabulaeRoutes.FeedHandler)
 
-	router.GET("/api/notifications", tabulaeRoutes.NotificationsHandler)
-
 	/*
 	 * Media Database
 	 */
@@ -295,9 +292,6 @@ func init() {
 	/*
 	 * Appengine Handler
 	 */
-
-	http.HandleFunc("/_ah/channel/connected/", notifications.UserConnect)
-	http.HandleFunc("/_ah/channel/disconnected/", notifications.UserDisconnect)
 
 	// Register the app router
 	http.Handle("/", context.ClearHandler(app))
