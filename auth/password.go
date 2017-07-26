@@ -313,7 +313,9 @@ func PasswordRegisterHandler() http.HandlerFunc {
 			req.Header.Add("Content-Type", "application/json")
 			req.Header.Add("Authorization", "Bearer sk_e571cbd973ecee8874cdbc33559e7480")
 
-			clearBitResp, err := client.Do(req)
+			clearBitContext, _ := context.WithTimeout(c, time.Second*5)
+			clearBitClient := urlfetch.Client(clearBitContext)
+			clearBitResp, err := clearBitClient.Do(req)
 			if err == nil {
 				var clearBitRiskResponse ClearBitRiskResponse
 				err = json.NewDecoder(clearBitResp.Body).Decode(&clearBitRiskResponse)
@@ -340,13 +342,15 @@ func PasswordRegisterHandler() http.HandlerFunc {
 			getUrl := "https://open.kickbox.io/v1/disposable/" + emailSplit[1]
 			req, _ := http.NewRequest("GET", getUrl, nil)
 
-			respKickBox, err := client.Do(req)
+			kickBoxContext, _ := context.WithTimeout(c, time.Second*5)
+			kickBoxClient := urlfetch.Client(kickBoxContext)
+			respKickBox, err := kickBoxClient.Do(req)
 			if err == nil {
 				var kickBoxResponse KickBoxDisposableResponse
 				err = json.NewDecoder(respKickBox.Body).Decode(&kickBoxResponse)
 				if err == nil {
 					if kickBoxResponse.Disposable {
-						disposableEmailAlert := url.QueryEscape("We believe your email is a disposable email. Please contact us! We can't allow you to sign up right now.")
+						disposableEmailAlert := url.QueryEscape("We believe your email is a disposable email. Please contact us! Since our service is an emailing service, we can't allow you to sign up with a disposable email address.")
 						log.Infof(c, "%v", email)
 						log.Errorf(c, "%v", disposableEmailAlert)
 						http.Redirect(w, r, "/api/auth?success=false&message="+disposableEmailAlert, 302)
