@@ -57,6 +57,10 @@ type ClearBitRiskResponse struct {
 	} `json:"risk"`
 }
 
+type KickBoxDisposableResponse struct {
+	Disposable bool `json:"disposable"`
+}
+
 type ReCaptchaResponse struct {
 	Success     bool     `json:"success"`
 	ChallengeTs string   `json:"challenge_ts"`
@@ -325,6 +329,38 @@ func PasswordRegisterHandler() http.HandlerFunc {
 			}
 		} else {
 			log.Errorf(c, "%v", err)
+		}
+
+		/*
+			Check if account is made from a disposable email
+		*/
+
+		emailSplit := strings.Split(email, "@")
+		if len(emailSplit) == 2 {
+			getUrl := "https://open.kickbox.io/v1/disposable/" + emailSplit[1]
+			req, _ := http.NewRequest("GET", getUrl, nil)
+
+			respKickBox, err := client.Do(req)
+			if err == nil {
+				var kickBoxResponse KickBoxDisposableResponse
+				err = json.NewDecoder(respKickBox.Body).Decode(&kickBoxResponse)
+				if err == nil {
+					if kickBoxResponse.Disposable {
+						disposableEmailAlert := url.QueryEscape("We believe your email is a disposable email. Please contact us! We can't allow you to sign up right now.")
+						log.Infof(c, "%v", email)
+						log.Errorf(c, "%v", disposableEmailAlert)
+						http.Redirect(w, r, "/api/auth?success=false&message="+disposableEmailAlert, 302)
+						return
+						log.Infof(c, "%v", kickBoxResponse)
+					}
+				} else {
+					log.Errorf(c, "%v", err)
+				}
+			} else {
+				log.Errorf(c, "%v", err)
+			}
+		} else {
+			log.Errorf(c, "%v", "Email seems invalid "+email)
 		}
 
 		invitedBy := int64(0)
