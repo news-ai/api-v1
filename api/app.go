@@ -175,6 +175,9 @@ func init() {
 	router.GET("/api/agencies", apiRoutes.AgenciesHandler)
 	router.GET("/api/agencies/:id", apiRoutes.AgencyHandler)
 
+	router.GET("/api/clients", apiRoutes.ClientsHandler)
+	router.GET("/api/clients/:id", apiRoutes.ClientHandler)
+
 	router.GET("/api/teams", apiRoutes.TeamsHandler)
 	router.POST("/api/teams", apiRoutes.TeamsHandler)
 	router.GET("/api/teams/:id", apiRoutes.TeamHandler)

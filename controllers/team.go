@@ -36,7 +36,6 @@ func getTeam(c context.Context, id int64) (models.Team, error) {
 	teamId := datastore.NewKey(c, "Team", "", id, nil)
 
 	err := nds.Get(c, teamId, &team)
-
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return models.Team{}, err
