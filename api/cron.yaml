@@ -20,7 +20,7 @@ cron:
   schedule: every 1 minutes
   target: default
 - description: My Daily Backup
-  url: /_ah/datastore_admin/backup.create?kind=Agency&kind=Billing&kind=Contact&kind=Email&kind=Feed&kind=File&kind=MediaList&kind=Notification&kind=NotificationChange&kind=NotificationObject&kind=Publication&kind=Session&kind=Team&kind=Template&kind=User&kind=UserInviteCode&kind=UserToken&filesystem=gs&gs_bucket_name=tabulae_backups
+  url: /_ah/datastore_admin/backup.create?kind=Agency&kind=Billing&kind=Contact&kind=Email&kind=Feed&kind=File&kind=MediaList&kind=Publication&kind=Session&kind=Team&kind=Template&kind=User&kind=UserInviteCode&filesystem=gs&gs_bucket_name=tabulae_backups
   schedule: every 48 hours
   target: ah-builtin-python-bundle
 # - description: "imported files removal job"

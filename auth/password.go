@@ -61,6 +61,10 @@ type KickBoxDisposableResponse struct {
 	Disposable bool `json:"disposable"`
 }
 
+type SlackRequest struct {
+	Text string `json:"text"`
+}
+
 type ReCaptchaResponse struct {
 	Success     bool     `json:"success"`
 	ChallengeTs string   `json:"challenge_ts"`
@@ -350,6 +354,27 @@ func PasswordRegisterHandler() http.HandlerFunc {
 				err = json.NewDecoder(respKickBox.Body).Decode(&kickBoxResponse)
 				if err == nil {
 					if kickBoxResponse.Disposable {
+						// Send slack a message to note the failed
+						// authentication
+						slackRequest := SlackRequest{}
+						slackRequest.Text = "Auth rejected for email: " + email
+						slackRequestJson, err := json.Marshal(slackRequest)
+						if err == nil {
+							slackRequestByte := bytes.NewReader(slackRequestJson)
+							postUrl := "https://hooks.slack.com/services/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"
+							req, _ := http.NewRequest("POST", postUrl, slackRequestByte)
+							req.Header.Add("Content-Type", "application/json")
+
+							slackContext, _ := context.WithTimeout(c, time.Second*5)
+							slackClient := urlfetch.Client(slackContext)
+							_, err := slackClient.Do(req)
+							if err != nil {
+								log.Errorf(c, "%v", err)
+							}
+						} else {
+							log.Infof(c, "%v", err)
+						}
+
 						disposableEmailAlert := url.QueryEscape("We believe your email is a disposable email. Please contact us! Since our service is an emailing service, we can't allow you to sign up with a disposable email address.")
 						log.Infof(c, "%v", email)
 						log.Errorf(c, "%v", disposableEmailAlert)

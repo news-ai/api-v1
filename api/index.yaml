@@ -61,13 +61,6 @@ indexes:
     - name: Created
       direction: desc
 
-- kind: NotificationChange
-  ancestor: no
-  properties:
-    - name: CreatedBy
-    - name: Created
-      direction: desc
-
 - kind: MediaList
   ancestor: no
   properties:
