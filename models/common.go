@@ -75,7 +75,7 @@ func SetField(obj interface{}, name string, value interface{}) error {
 	}
 
 	// Int64
-	if name == "Id" || name == "CreatedBy" || name == "ParentContact" || name == "ListId" || name == "ContactId" || name == "PublicationId" || name == "TweetId" || name == "FileUpload" || name == "TeamId" || name == "TemplateId" {
+	if name == "Id" || name == "CreatedBy" || name == "ParentContact" || name == "ListId" || name == "ContactId" || name == "PublicationId" || name == "TweetId" || name == "FileUpload" || name == "TeamId" || name == "TemplateId" || name == "ClientId" {
 		returnValue := cast.ToInt64(value)
 		val := reflect.ValueOf(returnValue)
 		structFieldValue.Set(val)

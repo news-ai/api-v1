@@ -19,8 +19,9 @@ import (
 )
 
 var (
-	elasticContactDatabase *elastic.Elastic
-	elasticMediaDatabase   *elastic.Elastic
+	elasticContactDatabase          *elastic.Elastic
+	elasticMediaDatabase            *elastic.Elastic
+	elasticMediaDatabasePublication *elastic.Elastic
 )
 
 type EnhanceResponse struct {
@@ -203,20 +204,40 @@ func searchESMediaDatabase(c context.Context, elasticQuery interface{}) (interfa
 	}
 
 	contactHits := hits.Hits
-
 	if len(contactHits) == 0 {
 		log.Infof(c, "%v", hits)
 		return nil, 0, 0, errors.New("No media database contacts")
 	}
 
 	var interfaceSlice = make([]interface{}, len(contactHits))
-
 	for i := 0; i < len(contactHits); i++ {
 		interfaceSlice[i] = contactHits[i].Source.Data
 	}
 
 	return interfaceSlice, len(contactHits), hits.Total, nil
 }
+
+func searchESMediaDatabasePublication(c context.Context, elasticQuery interface{}) (interface{}, int, int, error) {
+	hits, err := elasticMediaDatabasePublication.QueryStruct(c, elasticQuery)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return nil, 0, 0, err
+	}
+
+	publicationHits := hits.Hits
+	if len(publicationHits) == 0 {
+		log.Infof(c, "%v", hits)
+		return nil, 0, 0, errors.New("No media database publications")
+	}
+
+	var interfaceSlice = make([]interface{}, len(publicationHits))
+	for i := 0; i < len(publicationHits); i++ {
+		interfaceSlice[i] = publicationHits[i].Source.Data
+	}
+
+	return interfaceSlice, len(publicationHits), hits.Total, nil
+}
+
 func searchESContactsDatabase(c context.Context, elasticQuery elastic.ElasticQuery) (interface{}, int, int, error) {
 	hits, err := elasticContactDatabase.QueryStruct(c, elasticQuery)
 	if err != nil {
@@ -362,6 +383,22 @@ func SearchContactInMediaDatabase(c context.Context, r *http.Request, email stri
 	}
 
 	return enhanceResponse, nil
+}
+
+func SearchESMediaDatabasePublications(c context.Context, r *http.Request) (interface{}, int, int, error) {
+	offset := gcontext.Get(r, "offset").(int)
+	limit := gcontext.Get(r, "limit").(int)
+
+	elasticQuery := elastic.ElasticQueryWithSort{}
+	elasticQuery.Size = limit
+	elasticQuery.From = offset
+
+	elasticCreatedQuery := ElasticSortDataCreatedLowerQuery{}
+	elasticCreatedQuery.DataCreated.Order = "desc"
+	elasticCreatedQuery.DataCreated.Mode = "avg"
+	elasticQuery.Sort = append(elasticQuery.Sort, elasticCreatedQuery)
+
+	return searchESMediaDatabasePublication(c, elasticQuery)
 }
 
 func SearchESMediaDatabase(c context.Context, r *http.Request) (interface{}, int, int, error) {
