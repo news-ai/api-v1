@@ -251,7 +251,7 @@ func InitializeElasticSearch() {
 	mediaDatabasePublicationElastic := elastic.Elastic{}
 	mediaDatabasePublicationElastic.BaseURL = NewBaseURL
 	mediaDatabasePublicationElastic.Index = "md"
-	mediaDatabasePublicationElastic.Type = "contacts"
+	mediaDatabasePublicationElastic.Type = "publications"
 	elasticMediaDatabasePublication = &mediaDatabasePublicationElastic
 
 	headlineElastic := elastic.Elastic{}

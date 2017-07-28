@@ -12,6 +12,11 @@ func SetField(obj interface{}, name string, value interface{}) error {
 		name = "Id"
 	}
 
+	// Rename the lowercase organization name
+	if name == "organizationName" {
+		name = "OrganizationName"
+	}
+
 	structValue := reflect.ValueOf(obj).Elem()
 	structFieldValue := structValue.FieldByName(name)
 

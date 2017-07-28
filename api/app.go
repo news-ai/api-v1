@@ -257,7 +257,9 @@ func init() {
 	router.PATCH("/api/database-contacts/:id", pitchRoutes.MediaDatabaseContactHandler)
 	router.GET("/api/database-contacts/:id/:action", pitchRoutes.MediaDatabaseContactActionHandler)
 
-	router.GET("/api/database-publications", pitchRoutes.MediaDatabaseContactsHandler)
+	router.GET("/api/database-publications", pitchRoutes.MediaDatabasePublicationsHandler)
+	router.GET("/api/database-publications/:id", pitchRoutes.MediaDatabasePublicationHandler)
+	router.GET("/api/database-publications/:id/:action", pitchRoutes.MediaDatabasePublicationActionHandler)
 
 	// Security fixes
 	secureMiddleware := secure.New(secure.Options{

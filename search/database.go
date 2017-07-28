@@ -230,12 +230,22 @@ func searchESMediaDatabasePublication(c context.Context, elasticQuery interface{
 		return nil, 0, 0, errors.New("No media database publications")
 	}
 
-	var interfaceSlice = make([]interface{}, len(publicationHits))
+	publications := []pitchModels.Publication{}
 	for i := 0; i < len(publicationHits); i++ {
-		interfaceSlice[i] = publicationHits[i].Source.Data
+		rawPublication := publicationHits[i].Source.Data
+		rawMap := rawPublication.(map[string]interface{})
+		publication := pitchModels.Publication{}
+		err := publication.FillStruct(rawMap)
+		if err != nil {
+			log.Errorf(c, "%v", err)
+		}
+
+		publication.Id = publicationHits[i].ID
+		publication.Type = "media-publications"
+		publications = append(publications, publication)
 	}
 
-	return interfaceSlice, len(publicationHits), hits.Total, nil
+	return publications, len(publications), hits.Total, nil
 }
 
 func searchESContactsDatabase(c context.Context, elasticQuery elastic.ElasticQuery) (interface{}, int, int, error) {
