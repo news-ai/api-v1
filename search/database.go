@@ -192,6 +192,42 @@ type EnhanceEmailVerificationResponse struct {
 	} `json:"data"`
 }
 
+type SearchMediaDatabaseInner struct {
+	Beats           []string `json:"beats"`
+	OccasionalBeats []string `json:"occasionalBeats"`
+	IsFreelancer    bool     `json:"isFreelancer"`
+
+	Locations     []string `json:"locations"`
+	Organizations []string `json:"organizations"`
+
+	// Search RSS-related fields
+	RSS struct {
+		Headline    string `json:"headline"`
+		IncludeBody bool   `json:"includeBody"`
+	} `json:"rss"`
+
+	// Search Instagram-related fields
+	Instagram struct {
+		Description string `json:"description"`
+	} `json:"instagram"`
+
+	// Search Twitter-related fields
+	Twitter struct {
+		TweetBody       string `json:"tweetbody"`
+		UserDescription string `json:"userDescription"`
+	} `json:"twitter"`
+
+	Time struct {
+		From time.Time `json:"from"`
+		To   time.Time `json:"to"`
+	} `json:"time"`
+}
+
+type SearchMediaDatabaseQuery struct {
+	Included SearchMediaDatabaseInner `json:"included"`
+	Excluded SearchMediaDatabaseInner `json:"excluded"`
+}
+
 type DatabaseResponse struct {
 	Email string      `json:"email"`
 	Data  interface{} `json:"data"`
@@ -316,7 +352,7 @@ func SearchCompanyDatabase(c context.Context, r *http.Request, url string) (Enha
 }
 
 func SearchContactDatabase(c context.Context, r *http.Request, email string) (EnhanceFullContactProfileResponse, error) {
-	contextWithTimeout, _ := context.WithTimeout(c, time.Second*15)
+	contextWithTimeout, _ := context.WithTimeout(c, time.Second*8)
 	client := urlfetch.Client(contextWithTimeout)
 	getUrl := "https://enhance.newsai.org/fullcontact/" + email
 
@@ -413,6 +449,22 @@ func SearchESMediaDatabasePublications(c context.Context, r *http.Request) (inte
 }
 
 func SearchESMediaDatabase(c context.Context, r *http.Request) (interface{}, int, int, error) {
+	offset := gcontext.Get(r, "offset").(int)
+	limit := gcontext.Get(r, "limit").(int)
+
+	elasticQuery := elastic.ElasticQueryWithSort{}
+	elasticQuery.Size = limit
+	elasticQuery.From = offset
+
+	elasticCreatedQuery := ElasticSortDataCreatedLowerQuery{}
+	elasticCreatedQuery.DataCreated.Order = "desc"
+	elasticCreatedQuery.DataCreated.Mode = "avg"
+	elasticQuery.Sort = append(elasticQuery.Sort, elasticCreatedQuery)
+
+	return searchESMediaDatabase(c, elasticQuery)
+}
+
+func SearchContactsInESMediaDatabase(c context.Context, r *http.Request, searchQuery SearchMediaDatabaseQuery) (interface{}, int, int, error) {
 	offset := gcontext.Get(r, "offset").(int)
 	limit := gcontext.Get(r, "limit").(int)
 
