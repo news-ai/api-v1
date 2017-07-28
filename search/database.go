@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"net/url"
 	"time"
 
 	"golang.org/x/net/context"
@@ -436,4 +437,36 @@ func SearchESContactsDatabase(c context.Context, r *http.Request) (interface{}, 
 	elasticQuery.From = offset
 
 	return searchESContactsDatabase(c, elasticQuery)
+}
+
+func SearchPublicationInESMediaDatabase(c context.Context, r *http.Request, search string) ([]pitchModels.Publication, int, error) {
+	search = url.QueryEscape(search)
+	search = "q=data.organizationName:" + search
+
+	offset := gcontext.Get(r, "offset").(int)
+	limit := gcontext.Get(r, "limit").(int)
+
+	hits, err := elasticMediaDatabasePublication.Query(c, offset, limit, search)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return []pitchModels.Publication{}, 0, err
+	}
+
+	publicationHits := hits.Hits
+	publications := []pitchModels.Publication{}
+	for i := 0; i < len(publicationHits); i++ {
+		rawPublication := publicationHits[i].Source.Data
+		rawMap := rawPublication.(map[string]interface{})
+		publication := pitchModels.Publication{}
+		err := publication.FillStruct(rawMap)
+		if err != nil {
+			log.Errorf(c, "%v", err)
+		}
+
+		publication.Id = publicationHits[i].ID
+		publication.Type = "publications"
+		publications = append(publications, publication)
+	}
+
+	return publications, hits.Total, nil
 }
