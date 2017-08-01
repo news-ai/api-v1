@@ -195,7 +195,9 @@ type EnhanceEmailVerificationResponse struct {
 type SearchMediaDatabaseInner struct {
 	Beats           []string `json:"beats"`
 	OccasionalBeats []string `json:"occasionalBeats"`
-	IsFreelancer    bool     `json:"isFreelancer"`
+
+	IsFreelancer bool `json:"isFreelancer"`
+	IsInfluencer bool `json:"isInfluencer"`
 
 	Locations     []string `json:"locations"`
 	Organizations []string `json:"organizations"`
@@ -243,7 +245,7 @@ func searchESMediaDatabase(c context.Context, elasticQuery interface{}) (interfa
 	contactHits := hits.Hits
 	if len(contactHits) == 0 {
 		log.Infof(c, "%v", hits)
-		return nil, 0, 0, errors.New("No media database contacts")
+		return nil, 0, 0, nil
 	}
 
 	var interfaceSlice = make([]interface{}, len(contactHits))
@@ -476,6 +478,20 @@ func SearchContactsInESMediaDatabase(c context.Context, r *http.Request, searchQ
 	elasticCreatedQuery.DataCreated.Order = "desc"
 	elasticCreatedQuery.DataCreated.Mode = "avg"
 	elasticQuery.Sort = append(elasticQuery.Sort, elasticCreatedQuery)
+
+	if len(searchQuery.Included.Beats) == 1 {
+		elasticBeatsQuery := ElasticWritingInformationBeatsQuery{}
+		elasticBeatsQuery.Term.Beats = searchQuery.Included.Beats[0]
+		elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticBeatsQuery)
+	}
+
+	elasticIsFreelancerQuery := ElasticIsFreelancerQuery{}
+	elasticIsFreelancerQuery.Term.IsFreelancer = searchQuery.Included.IsFreelancer
+	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticIsFreelancerQuery)
+
+	elasticIsInfluencerQuery := ElasticIsInfluencerQuery{}
+	elasticIsInfluencerQuery.Term.IsInfluencer = searchQuery.Included.IsInfluencer
+	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticIsInfluencerQuery)
 
 	return searchESMediaDatabase(c, elasticQuery)
 }

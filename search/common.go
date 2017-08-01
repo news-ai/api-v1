@@ -72,6 +72,12 @@ type ElasticTagQuery struct {
 	} `json:"match"`
 }
 
+type ElasticWritingInformationBeatsQuery struct {
+	Term struct {
+		Beats string `json:"data.writingInformation.beats"`
+	} `json:"match"`
+}
+
 type ElasticEmployersQuery struct {
 	Term struct {
 		Employers string `json:"data.Employers"`
@@ -87,6 +93,18 @@ type ElasticAllQuery struct {
 type ElasticArchivedQuery struct {
 	Term struct {
 		Archived bool `json:"data.Archived"`
+	} `json:"term"`
+}
+
+type ElasticIsFreelancerQuery struct {
+	Term struct {
+		IsFreelancer bool `json:"data.writingInformation.isFreelancer"`
+	} `json:"term"`
+}
+
+type ElasticIsInfluencerQuery struct {
+	Term struct {
+		IsInfluencer bool `json:"data.writingInformation.isInfluencer"`
 	} `json:"term"`
 }
 
