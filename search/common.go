@@ -30,6 +30,24 @@ type ElasticBaseSubjectQuery struct {
 	} `json:"term"`
 }
 
+type ElasticLocationCityQuery struct {
+	Term struct {
+		City string `json:"data.demographics.locationDeduced.city.name"`
+	} `json:"term"`
+}
+
+type ElasticLocationStateQuery struct {
+	Term struct {
+		State string `json:"data.demographics.locationDeduced.state.name"`
+	} `json:"term"`
+}
+
+type ElasticLocationCountryQuery struct {
+	Term struct {
+		Country string `json:"data.demographics.locationDeduced.country.name"`
+	} `json:"term"`
+}
+
 type ElasticBaseOpenedQuery struct {
 	Term struct {
 		Opened int64 `json:"data.Opened"`

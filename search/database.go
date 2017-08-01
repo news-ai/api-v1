@@ -196,11 +196,20 @@ type SearchMediaDatabaseInner struct {
 	Beats           []string `json:"beats"`
 	OccasionalBeats []string `json:"occasionalBeats"`
 
+	// Single-option fields (so no AND or OR)
 	IsFreelancer bool `json:"isFreelancer"`
 	IsInfluencer bool `json:"isInfluencer"`
 
-	Locations     []string `json:"locations"`
+	// Could be both AND or OR. Works for X and Y or all contacts that
+	// work for X or Y
 	Organizations []string `json:"organizations"`
+
+	// Locations is definitely an OR field
+	Locations []struct {
+		Country string `json:"country"`
+		State   string `json:"state"`
+		City    string `json:"city"`
+	} `json:"locations"`
 
 	// Search RSS-related fields
 	RSS struct {
@@ -478,6 +487,22 @@ func SearchContactsInESMediaDatabase(c context.Context, r *http.Request, searchQ
 	elasticCreatedQuery.DataCreated.Order = "desc"
 	elasticCreatedQuery.DataCreated.Mode = "avg"
 	elasticQuery.Sort = append(elasticQuery.Sort, elasticCreatedQuery)
+
+	if len(searchQuery.Included.Locations) == 1 {
+		elasticLocationCityQuery := ElasticLocationCityQuery{}
+		elasticLocationCityQuery.Term.City = searchQuery.Included.Locations[0].City
+		elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticLocationCityQuery)
+
+		elasticLocationStateQuery := ElasticLocationStateQuery{}
+		elasticLocationStateQuery.Term.State = searchQuery.Included.Locations[0].State
+		elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticLocationStateQuery)
+
+		elasticLocationCountryQuery := ElasticLocationCountryQuery{}
+		elasticLocationCountryQuery.Term.Country = searchQuery.Included.Locations[0].Country
+		elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticLocationCountryQuery)
+	} else if len(searchQuery.Included.Locations) > 1 {
+
+	}
 
 	if len(searchQuery.Included.Beats) == 1 {
 		elasticBeatsQuery := ElasticWritingInformationBeatsQuery{}
