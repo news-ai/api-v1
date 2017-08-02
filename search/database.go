@@ -489,17 +489,23 @@ func SearchContactsInESMediaDatabase(c context.Context, r *http.Request, searchQ
 	elasticQuery.Sort = append(elasticQuery.Sort, elasticCreatedQuery)
 
 	if len(searchQuery.Included.Locations) == 1 {
-		elasticLocationCityQuery := ElasticLocationCityQuery{}
-		elasticLocationCityQuery.Term.City = searchQuery.Included.Locations[0].City
-		elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticLocationCityQuery)
+		if searchQuery.Included.Locations[0].City != "" {
+			elasticLocationCityQuery := ElasticLocationCityQuery{}
+			elasticLocationCityQuery.Term.City = searchQuery.Included.Locations[0].City
+			elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticLocationCityQuery)
+		}
 
-		elasticLocationStateQuery := ElasticLocationStateQuery{}
-		elasticLocationStateQuery.Term.State = searchQuery.Included.Locations[0].State
-		elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticLocationStateQuery)
+		if searchQuery.Included.Locations[0].State != "" {
+			elasticLocationStateQuery := ElasticLocationStateQuery{}
+			elasticLocationStateQuery.Term.State = searchQuery.Included.Locations[0].State
+			elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticLocationStateQuery)
+		}
 
-		elasticLocationCountryQuery := ElasticLocationCountryQuery{}
-		elasticLocationCountryQuery.Term.Country = searchQuery.Included.Locations[0].Country
-		elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticLocationCountryQuery)
+		if searchQuery.Included.Locations[0].Country != "" {
+			elasticLocationCountryQuery := ElasticLocationCountryQuery{}
+			elasticLocationCountryQuery.Term.Country = searchQuery.Included.Locations[0].Country
+			elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticLocationCountryQuery)
+		}
 	} else if len(searchQuery.Included.Locations) > 1 {
 
 	}
@@ -514,9 +520,9 @@ func SearchContactsInESMediaDatabase(c context.Context, r *http.Request, searchQ
 	elasticIsFreelancerQuery.Term.IsFreelancer = searchQuery.Included.IsFreelancer
 	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticIsFreelancerQuery)
 
-	elasticIsInfluencerQuery := ElasticIsInfluencerQuery{}
-	elasticIsInfluencerQuery.Term.IsInfluencer = searchQuery.Included.IsInfluencer
-	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticIsInfluencerQuery)
+	// elasticIsInfluencerQuery := ElasticIsInfluencerQuery{}
+	// elasticIsInfluencerQuery.Term.IsInfluencer = searchQuery.Included.IsInfluencer
+	// elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticIsInfluencerQuery)
 
 	return searchESMediaDatabase(c, elasticQuery)
 }
