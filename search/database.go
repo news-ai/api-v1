@@ -479,7 +479,7 @@ func SearchContactsInESMediaDatabase(c context.Context, r *http.Request, searchQ
 	offset := gcontext.Get(r, "offset").(int)
 	limit := gcontext.Get(r, "limit").(int)
 
-	elasticQuery := elastic.ElasticQueryWithSort{}
+	elasticQuery := elastic.ElasticQueryWithSortShould{}
 	elasticQuery.Size = limit
 	elasticQuery.From = offset
 
@@ -507,7 +507,14 @@ func SearchContactsInESMediaDatabase(c context.Context, r *http.Request, searchQ
 			elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticLocationCountryQuery)
 		}
 	} else if len(searchQuery.Included.Locations) > 1 {
-
+		for i := 0; i < searchQuery.Included.Locations; i++ {
+			// We do a "should" query on multiple locations. But, we only
+			// filter by cities. If we filter by states then it would give us
+			// all of the
+			elasticLocationCityQuery := ElasticLocationCityQuery{}
+			elasticLocationCityQuery.Term.City = searchQuery.Included.Locations[i].City
+			elasticQuery.Query.Bool.Should = append(elasticQuery.Query.Bool.Should, elasticLocationCityQuery)
+		}
 	}
 
 	if len(searchQuery.Included.Beats) == 1 {
