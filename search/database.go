@@ -516,13 +516,17 @@ func SearchContactsInESMediaDatabase(c context.Context, r *http.Request, searchQ
 		elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticBeatsQuery)
 	}
 
-	elasticIsFreelancerQuery := ElasticIsFreelancerQuery{}
-	elasticIsFreelancerQuery.Term.IsFreelancer = searchQuery.Included.IsFreelancer
-	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticIsFreelancerQuery)
+	if searchQuery.Included.IsFreelancer {
+		elasticIsFreelancerQuery := ElasticIsFreelancerQuery{}
+		elasticIsFreelancerQuery.Term.IsFreelancer = searchQuery.Included.IsFreelancer
+		elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticIsFreelancerQuery)
+	}
 
-	// elasticIsInfluencerQuery := ElasticIsInfluencerQuery{}
-	// elasticIsInfluencerQuery.Term.IsInfluencer = searchQuery.Included.IsInfluencer
-	// elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticIsInfluencerQuery)
+	if searchQuery.Included.IsInfluencer {
+		elasticIsInfluencerQuery := ElasticIsInfluencerQuery{}
+		elasticIsInfluencerQuery.Term.IsInfluencer = searchQuery.Included.IsInfluencer
+		elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticIsInfluencerQuery)
+	}
 
 	return searchESMediaDatabase(c, elasticQuery)
 }
