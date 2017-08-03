@@ -284,6 +284,12 @@ func InitializeElasticSearch() {
 	locationCountryElastic.Type = "country"
 	elasticLocationCountry = &locationCountryElastic
 
+	locationStateElastic := elastic.Elastic{}
+	locationStateElastic.BaseURL = NewBaseURL
+	locationStateElastic.Index = "locations"
+	locationStateElastic.Type = "state"
+	elasticLocationState = &locationStateElastic
+
 	mediaDatabaseElastic := elastic.Elastic{}
 	mediaDatabaseElastic.BaseURL = NewBaseURL
 	mediaDatabaseElastic.Index = "md1"
