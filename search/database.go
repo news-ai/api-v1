@@ -1,4 +1,4 @@
-package search
+ package search
 
 import (
 	"encoding/json"
@@ -20,6 +20,7 @@ import (
 )
 
 var (
+	elasticLocationCountry          *elastic.Elastic
 	elasticContactDatabase          *elastic.Elastic
 	elasticMediaDatabase            *elastic.Elastic
 	elasticMediaDatabasePublication *elastic.Elastic
@@ -507,7 +508,7 @@ func SearchContactsInESMediaDatabase(c context.Context, r *http.Request, searchQ
 			elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticLocationCountryQuery)
 		}
 	} else if len(searchQuery.Included.Locations) > 1 {
-		for i := 0; i < searchQuery.Included.Locations; i++ {
+		for i := 0; i < len(searchQuery.Included.Locations); i++ {
 			// We do a "should" query on multiple locations. But, we only
 			// filter by cities. If we filter by states then it would give us
 			// all of the
@@ -521,6 +522,12 @@ func SearchContactsInESMediaDatabase(c context.Context, r *http.Request, searchQ
 		elasticBeatsQuery := ElasticWritingInformationBeatsQuery{}
 		elasticBeatsQuery.Term.Beats = searchQuery.Included.Beats[0]
 		elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticBeatsQuery)
+	} else if len(searchQuery.Included.Beats) > 1 {
+		for i := 0; i < len(searchQuery.Included.Beats); i++ {
+			elasticBeatsQuery := ElasticWritingInformationBeatsQuery{}
+			elasticBeatsQuery.Term.Beats = searchQuery.Included.Beats[i]
+			elasticQuery.Query.Bool.Should = append(elasticQuery.Query.Bool.Should, elasticBeatsQuery)
+		}
 	}
 
 	if searchQuery.Included.IsFreelancer {
@@ -547,6 +554,33 @@ func SearchESContactsDatabase(c context.Context, r *http.Request) (interface{}, 
 	elasticQuery.From = offset
 
 	return searchESContactsDatabase(c, elasticQuery)
+}
+
+func ESCountryLocation(c context.Context, r *http.Request, country string) (interface{}, int, int, error) {
+	country = url.QueryEscape(country)
+	country = "q=data.countryName:" + country
+
+	offset := gcontext.Get(r, "offset").(int)
+	limit := gcontext.Get(r, "limit").(int)
+
+	hits, err := elasticLocationCountry.Query(c, offset, limit, country)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return nil, 0, 0, err
+	}
+
+	locationHits := hits.Hits
+	if len(locationHits) == 0 {
+		log.Infof(c, "%v", hits)
+		return nil, 0, 0, nil
+	}
+
+	var interfaceSlice = make([]interface{}, len(locationHits))
+	for i := 0; i < len(locationHits); i++ {
+		interfaceSlice[i] = locationHits[i].Source.Data
+	}
+
+	return interfaceSlice, len(locationHits), hits.Total, nil
 }
 
 func SearchPublicationInESMediaDatabase(c context.Context, r *http.Request, search string) ([]pitchModels.Publication, int, error) {
