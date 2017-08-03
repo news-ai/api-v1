@@ -20,6 +20,7 @@ import (
 )
 
 var (
+	elasticLocationCity             *elastic.Elastic
 	elasticLocationState            *elastic.Elastic
 	elasticLocationCountry          *elastic.Elastic
 	elasticContactDatabase          *elastic.Elastic
@@ -555,6 +556,33 @@ func SearchESContactsDatabase(c context.Context, r *http.Request) (interface{}, 
 	elasticQuery.From = offset
 
 	return searchESContactsDatabase(c, elasticQuery)
+}
+
+func ESCityLocation(c context.Context, r *http.Request, city, state, country string) (interface{}, int, int, error) {
+	country = url.QueryEscape(country)
+	country = "q=data.cityName:" + city + "&data.fixedStateName:" + state + "&data.fixedCountryName:" + country
+
+	offset := gcontext.Get(r, "offset").(int)
+	limit := gcontext.Get(r, "limit").(int)
+
+	hits, err := elasticLocationCity.Query(c, offset, limit, country)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return nil, 0, 0, err
+	}
+
+	locationHits := hits.Hits
+	if len(locationHits) == 0 {
+		log.Infof(c, "%v", hits)
+		return nil, 0, 0, nil
+	}
+
+	var interfaceSlice = make([]interface{}, len(locationHits))
+	for i := 0; i < len(locationHits); i++ {
+		interfaceSlice[i] = locationHits[i].Source.Data
+	}
+
+	return interfaceSlice, len(locationHits), hits.Total, nil
 }
 
 func ESStateLocation(c context.Context, r *http.Request, state string, country string) (interface{}, int, int, error) {
