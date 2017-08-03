@@ -559,13 +559,26 @@ func SearchESContactsDatabase(c context.Context, r *http.Request) (interface{}, 
 }
 
 func ESCityLocation(c context.Context, r *http.Request, city, state, country string) (interface{}, int, int, error) {
-	country = url.QueryEscape(country)
-	country = "q=data.cityName:" + city + "&data.fixedStateName:" + state + "&data.fixedCountryName:" + country
 
 	offset := gcontext.Get(r, "offset").(int)
 	limit := gcontext.Get(r, "limit").(int)
 
-	hits, err := elasticLocationCity.Query(c, offset, limit, country)
+	elasticQuery := elastic.ElasticQuery{}
+	elasticQuery.Size = limit
+	elasticQuery.From = offset
+
+	elasticFixedCountryNameQuery := ElasticFixedCountryNameQuery{}
+	elasticFixedCountryNameQuery.Term.FixedCountryName = country
+	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticFixedCountryNameQuery)
+
+	elasticFixedStateNameQuery := ElasticFixedStateNameQuery{}
+	elasticFixedStateNameQuery.Term.FixedStateName = state
+	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticFixedStateNameQuery)
+
+	city = url.QueryEscape(city)
+	city = "q=data.cityName:" + city
+
+	hits, err := elasticLocationCity.QueryStructWithSearchQueryUrl(c, elasticQuery, city)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return nil, 0, 0, err

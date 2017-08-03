@@ -78,6 +78,18 @@ type ElasticDelieveredQuery struct {
 	} `json:"term"`
 }
 
+type ElasticFixedCountryNameQuery struct {
+	Term struct {
+		FixedCountryName string `json:"data.fixedCountryName"`
+	} `json:"term"`
+}
+
+type ElasticFixedStateNameQuery struct {
+	Term struct {
+		FixedStateName string `json:"data.fixedStateName"`
+	} `json:"term"`
+}
+
 type ElasticClientQuery struct {
 	Term struct {
 		Client string `json:"data.Client"`
