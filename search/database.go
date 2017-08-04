@@ -624,12 +624,15 @@ func ESCityLocation(c context.Context, r *http.Request, cityName, stateName, cou
 	elasticMatchFixedStateNameQuery.Term.FixedStateName = stateName
 	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticMatchFixedStateNameQuery)
 
-	elasticCityNameMatchQuery := ElasticCityNameMatchQuery{}
-	elasticCityNameMatchQuery.Match.CityName = cityName
+	cityName = strings.Replace(cityName, "\"", "", -1)
+	if cityName != "" {
+		elasticCityNameMatchQuery := ElasticCityNameMatchQuery{}
+		elasticCityNameMatchQuery.Match.CityName = cityName
 
-	elasticBoolShouldQuery := ElasticBoolShouldQuery{}
-	elasticBoolShouldQuery.Bool.Should = append(elasticBoolShouldQuery.Bool.Should, elasticCityNameMatchQuery)
-	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticBoolShouldQuery)
+		elasticBoolShouldQuery := ElasticBoolShouldQuery{}
+		elasticBoolShouldQuery.Bool.Should = append(elasticBoolShouldQuery.Bool.Should, elasticCityNameMatchQuery)
+		elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticBoolShouldQuery)
+	}
 
 	hits, err := elasticLocationCity.QueryStruct(c, elasticQuery)
 	if err != nil {
@@ -655,7 +658,7 @@ func ESCityLocation(c context.Context, r *http.Request, cityName, stateName, cou
 
 		city.Id = locationHits[i].ID
 
-		if len(locationHits) > 1 {
+		if len(locationHits) > 1 && cityName != "" {
 			lowerCaseCityName := strings.ToLower(city.CityName)
 			lowerCaseFixedCityName := strings.ToLower(cityName)
 			if lowerCaseCityName[0] == lowerCaseFixedCityName[0] && strings.ToLower(city.FixedStateName) == strings.ToLower(stateName) && strings.ToLower(city.FixedCountryName) == strings.ToLower(countryName) {
@@ -691,12 +694,15 @@ func ESStateLocation(c context.Context, r *http.Request, stateName string, count
 	elasticMatchFixedCountryNameQuery.Term.FixedCountryName = countryName
 	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticMatchFixedCountryNameQuery)
 
-	elasticStateNameMatchQuery := ElasticStateNameMatchQuery{}
-	elasticStateNameMatchQuery.Match.StateName = stateName
+	stateName = strings.Replace(stateName, "\"", "", -1)
+	if stateName != "" {
+		elasticStateNameMatchQuery := ElasticStateNameMatchQuery{}
+		elasticStateNameMatchQuery.Match.StateName = stateName
 
-	elasticBoolShouldQuery := ElasticBoolShouldQuery{}
-	elasticBoolShouldQuery.Bool.Should = append(elasticBoolShouldQuery.Bool.Should, elasticStateNameMatchQuery)
-	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticBoolShouldQuery)
+		elasticBoolShouldQuery := ElasticBoolShouldQuery{}
+		elasticBoolShouldQuery.Bool.Should = append(elasticBoolShouldQuery.Bool.Should, elasticStateNameMatchQuery)
+		elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticBoolShouldQuery)
+	}
 
 	hits, err := elasticLocationState.QueryStruct(c, elasticQuery)
 	if err != nil {
@@ -722,7 +728,7 @@ func ESStateLocation(c context.Context, r *http.Request, stateName string, count
 
 		state.Id = locationHits[i].ID
 
-		if len(locationHits) > 1 {
+		if len(locationHits) > 1 && stateName != "" {
 			lowerCaseStateName := strings.ToLower(state.StateName)
 			lowerCaseFixedStateName := strings.ToLower(stateName)
 			if lowerCaseStateName[0] == lowerCaseFixedStateName[0] && strings.ToLower(state.FixedCountryName) == strings.ToLower(countryName) {
@@ -751,8 +757,12 @@ func ESCountryLocation(c context.Context, r *http.Request, countryName string) (
 		return nil, 0, 0, nil
 	}
 
-	search := url.QueryEscape(countryName)
-	search = "q=data.countryName:" + search
+	countryName = strings.Replace(countryName, "\"", "", -1)
+	search := ""
+	if countryName != "" {
+		search = url.QueryEscape(countryName)
+		search = "q=data.countryName:" + search
+	}
 
 	offset := gcontext.Get(r, "offset").(int)
 	limit := gcontext.Get(r, "limit").(int)
@@ -788,7 +798,7 @@ func ESCountryLocation(c context.Context, r *http.Request, countryName string) (
 		// unless there's only 1 thing matching. Then we can
 		// just allow it to pass (like Holy See, which can
 		// be search with Vatican)
-		if len(locationHits) > 1 {
+		if len(locationHits) > 1 && countryName != "" {
 			lowerCaseCountryName := strings.ToLower(country.CountryName)
 			lowerCaseFixedCountryName := strings.ToLower(countryName)
 			if lowerCaseCountryName[0] == lowerCaseFixedCountryName[0] {
