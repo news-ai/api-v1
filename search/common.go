@@ -90,9 +90,33 @@ type ElasticFixedStateNameQuery struct {
 	} `json:"term"`
 }
 
+type ElasticMatchFixedCountryNameQuery struct {
+	Term struct {
+		FixedCountryName string `json:"data.fixedCountryName"`
+	} `json:"match"`
+}
+
+type ElasticMatchFixedStateNameQuery struct {
+	Term struct {
+		FixedStateName string `json:"data.fixedStateName"`
+	} `json:"match"`
+}
+
+type ElasticBoolShouldQuery struct {
+	Bool struct {
+		Should []interface{} `json:"should"`
+	} `json:"bool"`
+}
+
 type ElasticClientQuery struct {
 	Term struct {
 		Client string `json:"data.Client"`
+	} `json:"match"`
+}
+
+type ElasticCityNameMatchQuery struct {
+	Match struct {
+		CityName string `json:"data.cityName"`
 	} `json:"match"`
 }
 

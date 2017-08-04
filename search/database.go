@@ -567,18 +567,22 @@ func ESCityLocation(c context.Context, r *http.Request, city, state, country str
 	elasticQuery.Size = limit
 	elasticQuery.From = offset
 
-	elasticFixedCountryNameQuery := ElasticFixedCountryNameQuery{}
-	elasticFixedCountryNameQuery.Term.FixedCountryName = country
-	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticFixedCountryNameQuery)
+	elasticMatchFixedCountryNameQuery := ElasticMatchFixedCountryNameQuery{}
+	elasticMatchFixedCountryNameQuery.Term.FixedCountryName = country
+	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticMatchFixedCountryNameQuery)
 
-	elasticFixedStateNameQuery := ElasticFixedStateNameQuery{}
-	elasticFixedStateNameQuery.Term.FixedStateName = state
-	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticFixedStateNameQuery)
+	elasticMatchFixedStateNameQuery := ElasticMatchFixedStateNameQuery{}
+	elasticMatchFixedStateNameQuery.Term.FixedStateName = state
+	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticMatchFixedStateNameQuery)
 
-	city = url.QueryEscape(city)
-	city = "q=data.cityName:" + city
+	elasticCityNameMatchQuery := ElasticCityNameMatchQuery{}
+	elasticCityNameMatchQuery.Match.CityName = city
 
-	hits, err := elasticLocationCity.QueryStructWithSearchQueryUrl(c, elasticQuery, city)
+	elasticBoolShouldQuery := ElasticBoolShouldQuery{}
+	elasticBoolShouldQuery.Bool.Should = append(elasticBoolShouldQuery.Bool.Should, elasticCityNameMatchQuery)
+	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticBoolShouldQuery)
+
+	hits, err := elasticLocationCity.QueryStruct(c, elasticQuery)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return nil, 0, 0, err
