@@ -654,7 +654,22 @@ func ESCityLocation(c context.Context, r *http.Request, cityName, stateName, cou
 		}
 
 		city.Id = locationHits[i].ID
-		cities = append(cities, city)
+
+		if len(locationHits) > 1 {
+			lowerCaseCityName := strings.ToLower(city.CityName)
+			lowerCaseFixedCityName := strings.ToLower(cityName)
+			if lowerCaseCityName[0] == lowerCaseFixedCityName[0] && strings.ToLower(city.FixedStateName) == strings.ToLower(stateName) && strings.ToLower(city.FixedCountryName) == strings.ToLower(countryName) {
+				if strings.Contains(lowerCaseCityName, lowerCaseFixedCityName) {
+					cities = append(cities, city)
+				}
+			}
+		} else {
+			cities = append(cities, city)
+		}
+	}
+
+	if len(cities) == 0 {
+		return nil, 0, 0, nil
 	}
 
 	if strings.ToLower(cityName) == strings.ToLower(cities[0].CityName) && strings.ToLower(stateName) == strings.ToLower(cities[0].FixedStateName) && strings.ToLower(countryName) == strings.ToLower(cities[0].FixedCountryName) {
@@ -706,7 +721,22 @@ func ESStateLocation(c context.Context, r *http.Request, stateName string, count
 		}
 
 		state.Id = locationHits[i].ID
-		states = append(states, state)
+
+		if len(locationHits) > 1 {
+			lowerCaseStateName := strings.ToLower(state.StateName)
+			lowerCaseFixedStateName := strings.ToLower(stateName)
+			if lowerCaseStateName[0] == lowerCaseFixedStateName[0] && strings.ToLower(state.FixedCountryName) == strings.ToLower(countryName) {
+				if strings.Contains(lowerCaseStateName, lowerCaseFixedStateName) {
+					states = append(states, state)
+				}
+			}
+		} else {
+			states = append(states, state)
+		}
+	}
+
+	if len(states) == 0 {
+		return nil, 0, 0, nil
 	}
 
 	if strings.ToLower(stateName) == strings.ToLower(states[0].StateName) && strings.ToLower(countryName) == strings.ToLower(states[0].FixedCountryName) {
@@ -759,9 +789,11 @@ func ESCountryLocation(c context.Context, r *http.Request, countryName string) (
 		// just allow it to pass (like Holy See, which can
 		// be search with Vatican)
 		if len(locationHits) > 1 {
-			if country.CountryName[0] == countryName[0] {
+			lowerCaseCountryName := strings.ToLower(country.CountryName)
+			lowerCaseFixedCountryName := strings.ToLower(countryName)
+			if lowerCaseCountryName[0] == lowerCaseFixedCountryName[0] {
 				// We can now filter out the ones that don't seem like they match
-				if strings.Contains(country.CountryName, countryName) {
+				if strings.Contains(lowerCaseCountryName, lowerCaseFixedCountryName) {
 					countries = append(countries, country)
 				}
 			}
