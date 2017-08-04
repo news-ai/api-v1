@@ -17,6 +17,26 @@ func SetField(obj interface{}, name string, value interface{}) error {
 		name = "OrganizationName"
 	}
 
+	if name == "countryName" {
+		name = "CountryName"
+	}
+
+	if name == "fixedCountryName" {
+		name = "FixedCountryName"
+	}
+
+	if name == "stateName" {
+		name = "StateName"
+	}
+
+	if name == "fixedStateName" {
+		name = "FixedStateName"
+	}
+
+	if name == "cityName" {
+		name = "CityName"
+	}
+
 	structValue := reflect.ValueOf(obj).Elem()
 	structFieldValue := structValue.FieldByName(name)
 

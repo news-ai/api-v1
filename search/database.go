@@ -14,6 +14,7 @@ import (
 	"google.golang.org/appengine/log"
 	"google.golang.org/appengine/urlfetch"
 
+	apiModels "github.com/news-ai/api/models"
 	pitchModels "github.com/news-ai/pitch/models"
 
 	elastic "github.com/news-ai/elastic-appengine"
@@ -245,6 +246,54 @@ type SearchMediaDatabaseQuery struct {
 type DatabaseResponse struct {
 	Email string      `json:"email"`
 	Data  interface{} `json:"data"`
+}
+
+type LocationCityResponse struct {
+	Id               string `json:"id"`
+	FixedCountryName string `json:"countryName"`
+	FixedStateName   string `json:"stateName"`
+	CityName         string `json:"cityName"`
+}
+
+func (lcr *LocationCityResponse) FillStruct(m map[string]interface{}) error {
+	for k, v := range m {
+		err := apiModels.SetField(lcr, k, v)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+type LocationStateResponse struct {
+	Id               string `json:"id"`
+	FixedCountryName string `json:"countryName"`
+	StateName        string `json:"stateName"`
+}
+
+func (lsr *LocationStateResponse) FillStruct(m map[string]interface{}) error {
+	for k, v := range m {
+		err := apiModels.SetField(lsr, k, v)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+type LocationCountryResponse struct {
+	Id          string `json:"id"`
+	CountryName string `json:"countryName"`
+}
+
+func (lcr *LocationCountryResponse) FillStruct(m map[string]interface{}) error {
+	for k, v := range m {
+		err := apiModels.SetField(lcr, k, v)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func searchESMediaDatabase(c context.Context, elasticQuery interface{}) (interface{}, int, int, error) {
@@ -593,12 +642,21 @@ func ESCityLocation(c context.Context, r *http.Request, city, state, country str
 		return nil, 0, 0, nil
 	}
 
-	var interfaceSlice = make([]interface{}, len(locationHits))
+	cities := []LocationCityResponse{}
 	for i := 0; i < len(locationHits); i++ {
-		interfaceSlice[i] = locationHits[i].Source.Data
+		rawCity := locationHits[i].Source.Data
+		rawMap := rawCity.(map[string]interface{})
+		city := LocationCityResponse{}
+		err := city.FillStruct(rawMap)
+		if err != nil {
+			log.Errorf(c, "%v", err)
+		}
+
+		city.Id = locationHits[i].ID
+		cities = append(cities, city)
 	}
 
-	return interfaceSlice, len(locationHits), hits.Total, nil
+	return cities, len(cities), hits.Total, nil
 }
 
 func ESStateLocation(c context.Context, r *http.Request, state string, country string) (interface{}, int, int, error) {
@@ -632,12 +690,21 @@ func ESStateLocation(c context.Context, r *http.Request, state string, country s
 		return nil, 0, 0, nil
 	}
 
-	var interfaceSlice = make([]interface{}, len(locationHits))
+	states := []LocationStateResponse{}
 	for i := 0; i < len(locationHits); i++ {
-		interfaceSlice[i] = locationHits[i].Source.Data
+		rawState := locationHits[i].Source.Data
+		rawMap := rawState.(map[string]interface{})
+		state := LocationStateResponse{}
+		err := state.FillStruct(rawMap)
+		if err != nil {
+			log.Errorf(c, "%v", err)
+		}
+
+		state.Id = locationHits[i].ID
+		states = append(states, state)
 	}
 
-	return interfaceSlice, len(locationHits), hits.Total, nil
+	return states, len(states), hits.Total, nil
 }
 
 func ESCountryLocation(c context.Context, r *http.Request, country string) (interface{}, int, int, error) {
@@ -659,12 +726,21 @@ func ESCountryLocation(c context.Context, r *http.Request, country string) (inte
 		return nil, 0, 0, nil
 	}
 
-	var interfaceSlice = make([]interface{}, len(locationHits))
+	countries := []LocationCountryResponse{}
 	for i := 0; i < len(locationHits); i++ {
-		interfaceSlice[i] = locationHits[i].Source.Data
+		rawCountry := locationHits[i].Source.Data
+		rawMap := rawCountry.(map[string]interface{})
+		country := LocationCountryResponse{}
+		err := country.FillStruct(rawMap)
+		if err != nil {
+			log.Errorf(c, "%v", err)
+		}
+
+		country.Id = locationHits[i].ID
+		countries = append(countries, country)
 	}
 
-	return interfaceSlice, len(locationHits), hits.Total, nil
+	return countries, len(countries), hits.Total, nil
 }
 
 func SearchPublicationInESMediaDatabase(c context.Context, r *http.Request, search string) ([]pitchModels.Publication, int, error) {
