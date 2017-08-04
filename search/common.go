@@ -114,6 +114,12 @@ type ElasticClientQuery struct {
 	} `json:"match"`
 }
 
+type ElasticStateNameMatchQuery struct {
+	Match struct {
+		StateName string `json:"data.stateName"`
+	} `json:"match"`
+}
+
 type ElasticCityNameMatchQuery struct {
 	Match struct {
 		CityName string `json:"data.cityName"`

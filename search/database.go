@@ -559,7 +559,6 @@ func SearchESContactsDatabase(c context.Context, r *http.Request) (interface{}, 
 }
 
 func ESCityLocation(c context.Context, r *http.Request, city, state, country string) (interface{}, int, int, error) {
-
 	offset := gcontext.Get(r, "offset").(int)
 	limit := gcontext.Get(r, "limit").(int)
 
@@ -603,13 +602,25 @@ func ESCityLocation(c context.Context, r *http.Request, city, state, country str
 }
 
 func ESStateLocation(c context.Context, r *http.Request, state string, country string) (interface{}, int, int, error) {
-	country = url.QueryEscape(country)
-	country = "q=data.stateName:" + state + "&data.fixedCountryName:" + country
-
 	offset := gcontext.Get(r, "offset").(int)
 	limit := gcontext.Get(r, "limit").(int)
 
-	hits, err := elasticLocationState.Query(c, offset, limit, country)
+	elasticQuery := elastic.ElasticQuery{}
+	elasticQuery.Size = limit
+	elasticQuery.From = offset
+
+	elasticMatchFixedCountryNameQuery := ElasticMatchFixedCountryNameQuery{}
+	elasticMatchFixedCountryNameQuery.Term.FixedCountryName = country
+	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticMatchFixedCountryNameQuery)
+
+	elasticStateNameMatchQuery := ElasticStateNameMatchQuery{}
+	elasticStateNameMatchQuery.Match.StateName = state
+
+	elasticBoolShouldQuery := ElasticBoolShouldQuery{}
+	elasticBoolShouldQuery.Bool.Should = append(elasticBoolShouldQuery.Bool.Should, elasticStateNameMatchQuery)
+	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticBoolShouldQuery)
+
+	hits, err := elasticLocationState.QueryStruct(c, elasticQuery)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return nil, 0, 0, err
