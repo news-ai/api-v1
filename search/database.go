@@ -5,6 +5,7 @@ import (
 	"errors"
 	"net/http"
 	"net/url"
+	"strings"
 	"time"
 
 	"golang.org/x/net/context"
@@ -607,7 +608,7 @@ func SearchESContactsDatabase(c context.Context, r *http.Request) (interface{}, 
 	return searchESContactsDatabase(c, elasticQuery)
 }
 
-func ESCityLocation(c context.Context, r *http.Request, city, state, country string) (interface{}, int, int, error) {
+func ESCityLocation(c context.Context, r *http.Request, cityName, stateName, countryName string) (interface{}, int, int, error) {
 	offset := gcontext.Get(r, "offset").(int)
 	limit := gcontext.Get(r, "limit").(int)
 
@@ -616,15 +617,15 @@ func ESCityLocation(c context.Context, r *http.Request, city, state, country str
 	elasticQuery.From = offset
 
 	elasticMatchFixedCountryNameQuery := ElasticMatchFixedCountryNameQuery{}
-	elasticMatchFixedCountryNameQuery.Term.FixedCountryName = country
+	elasticMatchFixedCountryNameQuery.Term.FixedCountryName = countryName
 	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticMatchFixedCountryNameQuery)
 
 	elasticMatchFixedStateNameQuery := ElasticMatchFixedStateNameQuery{}
-	elasticMatchFixedStateNameQuery.Term.FixedStateName = state
+	elasticMatchFixedStateNameQuery.Term.FixedStateName = stateName
 	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticMatchFixedStateNameQuery)
 
 	elasticCityNameMatchQuery := ElasticCityNameMatchQuery{}
-	elasticCityNameMatchQuery.Match.CityName = city
+	elasticCityNameMatchQuery.Match.CityName = cityName
 
 	elasticBoolShouldQuery := ElasticBoolShouldQuery{}
 	elasticBoolShouldQuery.Bool.Should = append(elasticBoolShouldQuery.Bool.Should, elasticCityNameMatchQuery)
@@ -656,10 +657,14 @@ func ESCityLocation(c context.Context, r *http.Request, city, state, country str
 		cities = append(cities, city)
 	}
 
+	if strings.ToLower(cityName) == strings.ToLower(cities[0].CityName) && strings.ToLower(stateName) == strings.ToLower(cities[0].FixedStateName) && strings.ToLower(countryName) == strings.ToLower(cities[0].FixedCountryName) {
+		return []LocationCityResponse{cities[0]}, 1, 1, nil
+	}
+
 	return cities, len(cities), hits.Total, nil
 }
 
-func ESStateLocation(c context.Context, r *http.Request, state string, country string) (interface{}, int, int, error) {
+func ESStateLocation(c context.Context, r *http.Request, stateName string, countryName string) (interface{}, int, int, error) {
 	offset := gcontext.Get(r, "offset").(int)
 	limit := gcontext.Get(r, "limit").(int)
 
@@ -668,11 +673,11 @@ func ESStateLocation(c context.Context, r *http.Request, state string, country s
 	elasticQuery.From = offset
 
 	elasticMatchFixedCountryNameQuery := ElasticMatchFixedCountryNameQuery{}
-	elasticMatchFixedCountryNameQuery.Term.FixedCountryName = country
+	elasticMatchFixedCountryNameQuery.Term.FixedCountryName = countryName
 	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticMatchFixedCountryNameQuery)
 
 	elasticStateNameMatchQuery := ElasticStateNameMatchQuery{}
-	elasticStateNameMatchQuery.Match.StateName = state
+	elasticStateNameMatchQuery.Match.StateName = stateName
 
 	elasticBoolShouldQuery := ElasticBoolShouldQuery{}
 	elasticBoolShouldQuery.Bool.Should = append(elasticBoolShouldQuery.Bool.Should, elasticStateNameMatchQuery)
@@ -704,17 +709,25 @@ func ESStateLocation(c context.Context, r *http.Request, state string, country s
 		states = append(states, state)
 	}
 
+	if strings.ToLower(stateName) == strings.ToLower(states[0].StateName) && strings.ToLower(countryName) == strings.ToLower(states[0].FixedCountryName) {
+		return []LocationStateResponse{states[0]}, 1, 1, nil
+	}
+
 	return states, len(states), hits.Total, nil
 }
 
-func ESCountryLocation(c context.Context, r *http.Request, country string) (interface{}, int, int, error) {
-	country = url.QueryEscape(country)
-	country = "q=data.countryName:" + country
+func ESCountryLocation(c context.Context, r *http.Request, countryName string) (interface{}, int, int, error) {
+	if countryName == "" {
+		return nil, 0, 0, nil
+	}
+
+	search := url.QueryEscape(countryName)
+	search = "q=data.countryName:" + search
 
 	offset := gcontext.Get(r, "offset").(int)
 	limit := gcontext.Get(r, "limit").(int)
 
-	hits, err := elasticLocationCountry.Query(c, offset, limit, country)
+	hits, err := elasticLocationCountry.Query(c, offset, limit, search)
 	if err != nil {
 		log.Errorf(c, "%v", err)
 		return nil, 0, 0, err
@@ -737,7 +750,35 @@ func ESCountryLocation(c context.Context, r *http.Request, country string) (inte
 		}
 
 		country.Id = locationHits[i].ID
-		countries = append(countries, country)
+
+		// In this case we only want countries
+		// starting with that letter. "United" shouldn't
+		// return "Tanzania" even though it has "United"
+		// in it's name
+		// unless there's only 1 thing matching. Then we can
+		// just allow it to pass (like Holy See, which can
+		// be search with Vatican)
+		if len(locationHits) > 1 {
+			if country.CountryName[0] == countryName[0] {
+				// We can now filter out the ones that don't seem like they match
+				if strings.Contains(country.CountryName, countryName) {
+					countries = append(countries, country)
+				}
+			}
+		} else {
+			countries = append(countries, country)
+		}
+	}
+
+	// Check again if anything matches
+	if len(countries) == 0 {
+		return nil, 0, 0, nil
+	}
+
+	// This means that we've found the country, just return this
+	// no point in suggesting more
+	if strings.ToLower(countries[0].CountryName) == strings.ToLower(countryName) {
+		return []LocationCountryResponse{countries[0]}, 1, 1, nil
 	}
 
 	return countries, len(countries), hits.Total, nil
