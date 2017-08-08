@@ -36,6 +36,12 @@ type ElasticLocationCityQuery struct {
 	} `json:"term"`
 }
 
+type ElasticOrganizationNameQuery struct {
+	Match struct {
+		Name string `json:"data.organizations.name"`
+	} `json:"match"`
+}
+
 type ElasticLocationStateQuery struct {
 	Term struct {
 		State string `json:"data.demographics.locationDeduced.state.name"`

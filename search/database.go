@@ -541,6 +541,20 @@ func SearchContactsInESMediaDatabase(c context.Context, r *http.Request, searchQ
 	elasticCreatedQuery.DataCreated.Mode = "avg"
 	elasticQuery.Sort = append(elasticQuery.Sort, elasticCreatedQuery)
 
+	if len(searchQuery.Included.Organizations) == 1 {
+		if searchQuery.Included.Organizations[0] != "" {
+			elasticOrganizationNameQuery := ElasticOrganizationNameQuery{}
+			elasticOrganizationNameQuery.Match.Name = searchQuery.Included.Organizations[0]
+			elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticOrganizationNameQuery)
+		}
+	} else if len(searchQuery.Included.Organizations) > 1 {
+		for i := 0; i < len(searchQuery.Included.Organizations); i++ {
+			elasticOrganizationNameQuery := ElasticOrganizationNameQuery{}
+			elasticOrganizationNameQuery.Match.Name = searchQuery.Included.Organizations[i]
+			elasticQuery.Query.Bool.Should = append(elasticQuery.Query.Bool.Should, elasticOrganizationNameQuery)
+		}
+	}
+
 	if len(searchQuery.Included.Locations) == 1 {
 		if searchQuery.Included.Locations[0].City != "" {
 			elasticLocationCityQuery := ElasticLocationCityQuery{}
