@@ -871,3 +871,13 @@ func SearchPublicationInESMediaDatabase(c context.Context, r *http.Request, sear
 
 	return publications, hits.Total, nil
 }
+
+func GetMediaDatabaseContactsSchema(c context.Context) (interface{}, error) {
+	mapping, err := elasticMediaDatabase.GetMapping(c)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return nil, err
+	}
+
+	return mapping, nil
+}
