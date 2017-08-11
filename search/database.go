@@ -100,16 +100,7 @@ type EnhanceFullContactCompanyResponse struct {
 			} `json:"images"`
 			Keywords []string `json:"keywords"`
 		} `json:"organization"`
-		SocialProfiles []struct {
-			TypeID    string `json:"typeId"`
-			TypeName  string `json:"typeName"`
-			URL       string `json:"url"`
-			Bio       string `json:"bio,omitempty"`
-			Followers int    `json:"followers,omitempty"`
-			Following int    `json:"following,omitempty"`
-			Username  string `json:"username,omitempty"`
-			ID        string `json:"id,omitempty"`
-		} `json:"socialProfiles"`
+		SocialProfiles []pitchModels.SocialProfile `json:"socialProfiles"`
 	} `json:"data"`
 }
 
