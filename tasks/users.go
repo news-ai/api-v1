@@ -27,6 +27,7 @@ func RefreshUserLiveTokens(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	userIds := []int64{}
 	for i := 0; i < len(users); i++ {
 		if users[i].LiveAccessTokenExpire.Before(time.Now()) {
 			randomString := strconv.FormatInt(users[i].Id, 10)
@@ -37,7 +38,11 @@ func RefreshUserLiveTokens(w http.ResponseWriter, r *http.Request) {
 				time.Second*time.Duration(0))
 			controllers.SaveUser(c, r, &users[i])
 		}
+
+		userIds = append(userIds, users[i].Id)
 	}
+
+	sync.UserResourceBulkSync(r, userIds)
 }
 
 func MakeUsersInactive(w http.ResponseWriter, r *http.Request) {
