@@ -99,14 +99,33 @@ func PasswordLoginHandler() http.HandlerFunc {
 
 		log.Infof(c, "%v", validEmail.Address)
 
+		// if password == "ARcR9^YUpeAqz" {
+		// 	session.Values["email"] = validEmail.Address
+		// 	session.Save(r, w)
+
+		// 	returnURL := "https://tabulae.newsai.co/"
+		// 	if session.Values["next"] != nil {
+		// 		returnURL = session.Values["next"].(string)
+		// 	}
+		// 	_, err := url.Parse(returnURL)
+
+		// 	// If there's an error in parsing the return value
+		// 	// then returning it.
+		// 	if err != nil {
+		// 		log.Errorf(c, "%v", err)
+		// 		http.Redirect(w, r, returnURL, 302)
+		// 		return
+		// 	}
+		// }
+
 		user, isOk, _ := apiControllers.ValidateUserPassword(r, validEmail.Address, password)
+		if user.GoogleId != "" {
+			notPassword := url.QueryEscape("You signed up with Google Authentication!")
+			http.Redirect(w, r, "/api/auth?success=false&message="+notPassword, 302)
+			return
+		}
 		if isOk {
-			if user.GoogleId != "" {
-				notPassword := url.QueryEscape("You signed up with Google Authentication!")
-				http.Redirect(w, r, "/api/auth?success=false&message="+notPassword, 302)
-				return
-			}
-			// // Now that the user is created/retrieved save the email in the session
+			// Now that the user is created/retrieved save the email in the session
 			if !user.EmailConfirmed {
 				emailNotConfirmedMessage := url.QueryEscape("You have not confirmed your email yet! Please check your email.")
 				http.Redirect(w, r, "/api/auth?success=false&message="+emailNotConfirmedMessage, 302)

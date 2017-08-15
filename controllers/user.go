@@ -1076,7 +1076,7 @@ func ValidateUserPassword(r *http.Request, email string, password string) (model
 		err = utilities.ValidatePassword(user.Password, password)
 		if err != nil {
 			log.Errorf(c, "%v", err)
-			return models.User{}, false, nil
+			return user, false, nil
 		}
 		return user, true, nil
 	}

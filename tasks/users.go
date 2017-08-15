@@ -36,7 +36,7 @@ func RefreshUserLiveTokens(w http.ResponseWriter, r *http.Request) {
 			users[i].LiveAccessTokenExpire = time.Now().Local().Add(time.Hour*time.Duration(6) +
 				time.Minute*time.Duration(0) +
 				time.Second*time.Duration(0))
-			controllers.SaveUser(c, r, &users[i])
+			users[i].Save(c)
 		}
 
 		userIds = append(userIds, users[i].Id)

@@ -2,6 +2,7 @@ package api
 
 import (
 	"net/http"
+	_ "net/http/pprof"
 	"os"
 
 	"github.com/bradleyg/go-sentroni"

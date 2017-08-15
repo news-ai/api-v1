@@ -313,6 +313,7 @@ func SearchEnhanceForEmailVerification(c context.Context, r *http.Request, email
 		log.Errorf(c, "%v", err)
 		return EnhanceEmailVerificationResponse{}, err
 	}
+	defer resp.Body.Close()
 
 	var enhanceResponse EnhanceEmailVerificationResponse
 	err = json.NewDecoder(resp.Body).Decode(&enhanceResponse)
@@ -335,6 +336,7 @@ func SearchCompanyDatabase(c context.Context, r *http.Request, url string) (Enha
 		log.Errorf(c, "%v", err)
 		return EnhanceFullContactCompanyResponse{}, err
 	}
+	defer resp.Body.Close()
 
 	var enhanceResponse EnhanceFullContactCompanyResponse
 	err = json.NewDecoder(resp.Body).Decode(&enhanceResponse)
@@ -358,6 +360,7 @@ func SearchContactDatabase(c context.Context, r *http.Request, email string) (En
 		log.Errorf(c, "%v", err)
 		return EnhanceFullContactProfileResponse{}, err
 	}
+	defer resp.Body.Close()
 
 	var enhanceResponse EnhanceFullContactProfileResponse
 	err = json.NewDecoder(resp.Body).Decode(&enhanceResponse)
@@ -381,6 +384,7 @@ func SearchContactDatabaseForMediaDatbase(c context.Context, r *http.Request, em
 		log.Errorf(c, "%v", err)
 		return pitchModels.MediaDatabaseProfile{}, err
 	}
+	defer resp.Body.Close()
 
 	var enhanceResponse pitchModels.MediaDatabaseProfile
 	err = json.NewDecoder(resp.Body).Decode(&enhanceResponse)
@@ -404,6 +408,7 @@ func SearchContactInMediaDatabase(c context.Context, r *http.Request, email stri
 		log.Errorf(c, "%v", err)
 		return pitchModels.MediaDatabaseProfile{}, err
 	}
+	defer resp.Body.Close()
 
 	if resp.StatusCode != 200 {
 		err = errors.New("Invalid response from ES")
