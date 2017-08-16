@@ -161,6 +161,7 @@ func OutlookCallbackHandler(w http.ResponseWriter, r *http.Request, _ httprouter
 		fmt.Fprintln(w, "there was an issue getting your token")
 		return
 	}
+	defer resp.Body.Close()
 
 	// Decode JSON from Google
 	decoder := json.NewDecoder(resp.Body)

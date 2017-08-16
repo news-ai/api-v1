@@ -186,6 +186,7 @@ func GoogleCallbackHandler(w http.ResponseWriter, r *http.Request, _ httprouter.
 		fmt.Fprintln(w, err.Error())
 		return
 	}
+	defer resp.Body.Close()
 
 	// Decode JSON from Google
 	decoder := json.NewDecoder(resp.Body)

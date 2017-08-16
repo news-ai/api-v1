@@ -309,6 +309,8 @@ func PasswordRegisterHandler() http.HandlerFunc {
 			log.Errorf(c, "%v", err)
 		}
 
+		defer resp.Body.Close()
+
 		// Validate email
 		email = strings.ToLower(email)
 		validEmail, err := mail.ParseAddress(email)
@@ -352,6 +354,7 @@ func PasswordRegisterHandler() http.HandlerFunc {
 			} else {
 				log.Errorf(c, "%v", err)
 			}
+			defer clearBitResp.Body.Close()
 		} else {
 			log.Errorf(c, "%v", err)
 		}
@@ -407,6 +410,7 @@ func PasswordRegisterHandler() http.HandlerFunc {
 			} else {
 				log.Errorf(c, "%v", err)
 			}
+			defer respKickBox.Body.Close()
 		} else {
 			log.Errorf(c, "%v", "Email seems invalid "+email)
 		}
