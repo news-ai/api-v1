@@ -2,10 +2,9 @@ package api
 
 import (
 	"net/http"
-	_ "net/http/pprof"
+	// _ "net/http/pprof"
 	"os"
 
-	"github.com/bradleyg/go-sentroni"
 	"github.com/codegangsta/negroni"
 	"github.com/gorilla/context"
 	"github.com/gorilla/csrf"
@@ -274,7 +273,6 @@ func init() {
 	app.Use(negroni.HandlerFunc(middleware.UpdateOrCreateUser))
 	app.Use(negroni.HandlerFunc(commonMiddleware.AttachParameters))
 	app.Use(negroni.HandlerFunc(secureMiddleware.HandlerFuncWithNext))
-	app.Use(sentroni.NewRecovery(os.Getenv("SENTRY_DSN")))
 	app.UseHandler(router)
 
 	/*
