@@ -94,6 +94,10 @@ func PasswordLoginHandler() http.HandlerFunc {
 
 		// Save the session for each of the users
 		session, _ := Store.Get(r, "sess")
+		// session.Options.Domain = ".newsai.org"
+		// session.Options.Secure = true
+		// session.Options.MaxAge = 0
+		// session.Options.HttpOnly = false
 		session.Values["state"] = state
 		session.Save(r, w)
 
