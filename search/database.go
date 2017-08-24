@@ -403,6 +403,30 @@ func SearchContactDatabase(c context.Context, r *http.Request, email string) (En
 	return enhanceResponse, nil
 }
 
+func SearchContactVerifyDatabase(c context.Context, r *http.Request, email string) (EnhanceFullContactProfileVerifyResponse, error) {
+	contextWithTimeout, _ := context.WithTimeout(c, time.Second*8)
+	client := urlfetch.Client(contextWithTimeout)
+	getUrl := "https://enhance.newsai.org/fullcontact2/" + email
+
+	req, _ := http.NewRequest("GET", getUrl, nil)
+
+	resp, err := client.Do(req)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return EnhanceFullContactProfileVerifyResponse{}, err
+	}
+	defer resp.Body.Close()
+
+	var enhanceResponse EnhanceFullContactProfileVerifyResponse
+	err = json.NewDecoder(resp.Body).Decode(&enhanceResponse)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return EnhanceFullContactProfileVerifyResponse{}, err
+	}
+
+	return enhanceResponse, nil
+}
+
 func SearchContactDatabaseForMediaDatbase(c context.Context, r *http.Request, email string) (pitchModels.MediaDatabaseProfile, error) {
 	contextWithTimeout, _ := context.WithTimeout(c, time.Second*15)
 	client := urlfetch.Client(contextWithTimeout)
