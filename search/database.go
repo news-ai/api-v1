@@ -34,6 +34,37 @@ type EnhanceResponse struct {
 	Data interface{} `json:"data"`
 }
 
+type EnhanceFullContactProfileVerifyResponse struct {
+	Data struct {
+		Enrich EnhanceFullContactProfileResponse `json:"enrich"`
+		Verify EnhanceFullContactVerifyResponse  `json:"verify"`
+	} `json:"data"`
+}
+
+type EnhanceFullContactVerifyResponse struct {
+	Data struct {
+		RequestID string `json:"requestId"`
+		Status    int    `json:"status"`
+		Email     struct {
+			Message    string `json:"message"`
+			Person     string `json:"person"`
+			Username   string `json:"username"`
+			SendSafely bool   `json:"sendSafely"`
+			Corrected  bool   `json:"corrected"`
+			Address    string `json:"address"`
+			Company    string `json:"company"`
+			Domain     string `json:"domain"`
+			Attributes struct {
+				Disposable  bool `json:"disposable"`
+				Catchall    bool `json:"catchall"`
+				Risky       bool `json:"risky"`
+				Deliverable bool `json:"deliverable"`
+				ValidSyntax bool `json:"validSyntax"`
+			} `json:"attributes"`
+		} `json:"email"`
+	} `json:"data"`
+}
+
 type EnhanceFullContactProfileResponse struct {
 	Data struct {
 		Status int `json:"status"`
