@@ -15,10 +15,6 @@ cron:
   url: /tasks/refreshUserLiveTokens
   schedule: every 6 hours
   target: default
-- description: "send emails"
-  url: /tasks/sendSchedueleEmails
-  schedule: every 1 minutes
-  target: default
 - description: My Daily Backup
   url: /_ah/datastore_admin/backup.create?kind=Agency&kind=Billing&kind=Contact&kind=Email&kind=Feed&kind=File&kind=MediaList&kind=Publication&kind=Session&kind=Team&kind=Template&kind=User&kind=UserInviteCode&filesystem=gs&gs_bucket_name=tabulae_backups
   schedule: every 48 hours

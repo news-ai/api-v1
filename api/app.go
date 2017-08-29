@@ -25,9 +25,7 @@ import (
 	"github.com/news-ai/api/utils"
 
 	// Tabulae Imports
-	"github.com/news-ai/tabulae/incoming"
 	tabulaeRoutes "github.com/news-ai/tabulae/routes"
-	"github.com/news-ai/tabulae/schedule"
 	"github.com/news-ai/tabulae/search"
 
 	// Pitch Imports
@@ -153,12 +151,6 @@ func init() {
 	router.Handler("GET", "/api/billing", CSRF(auth.BillingPageHandler()))
 
 	/*
-	 * Incoming Handler
-	 */
-
-	router.POST("/api/incoming/internal_tracker", incoming.InternalTrackerHandler)
-
-	/*
 	 * API Handler
 	 */
 
@@ -205,9 +197,9 @@ func init() {
 	router.DELETE("/api/contacts/:id", tabulaeRoutes.ContactHandler)
 	router.GET("/api/contacts/:id/:action", tabulaeRoutes.ContactActionHandler)
 
-	router.GET("/api/contacts_v2", tabulaeRoutes.ContactsV2Handler)
-	router.POST("/api/contacts_v2", tabulaeRoutes.ContactsV2Handler)
-	router.GET("/api/contacts_v2/:id", tabulaeRoutes.ContactV2Handler)
+	// router.GET("/api/contacts_v2", tabulaeRoutes.ContactsV2Handler)
+	// router.POST("/api/contacts_v2", tabulaeRoutes.ContactsV2Handler)
+	// router.GET("/api/contacts_v2/:id", tabulaeRoutes.ContactV2Handler)
 
 	router.GET("/api/files", tabulaeRoutes.FilesHandler)
 	router.GET("/api/files/:id", tabulaeRoutes.FileHandler)
@@ -287,7 +279,6 @@ func init() {
 	// Repeated tasks
 	// Tasks needing to not have middleware
 	http.HandleFunc("/.well-known/acme-challenge/ZCLfT3oIOdBK0iUF28viK2IEvmjJ46_8NzBEE0F6jxA", apiTasks.LetsEncryptValidation)
-	http.HandleFunc("/tasks/sendSchedueleEmails", schedule.SchedueleEmailTask)
 	http.HandleFunc("/tasks/refreshUserLiveTokens", apiTasks.RefreshUserLiveTokens)
 	http.HandleFunc("/tasks/makeUsersInactive", apiTasks.MakeUsersInactive)
 	http.HandleFunc("/tasks/removeExpiredSessions", gaeTasks.RemoveExpiredSessionsHandler)
