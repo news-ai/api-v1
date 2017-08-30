@@ -272,8 +272,6 @@ func init() {
 	 */
 
 	// Tasks needing to have middleware
-	// router.POST("/tasks/socialUsernameToDetails", tasks.SocialUsernameToDetails)
-	router.POST("/tasks/socialUsernameInvalid", tabulaeTasks.SocialUsernameInvalid)
 	router.POST("/tasks/feedInvalid", tabulaeTasks.FeedInvalid)
 
 	// Repeated tasks
