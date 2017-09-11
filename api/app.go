@@ -271,9 +271,6 @@ func init() {
 	 * Tasks Handler
 	 */
 
-	// Tasks needing to have middleware
-	router.POST("/tasks/feedInvalid", tabulaeTasks.FeedInvalid)
-
 	// Repeated tasks
 	// Tasks needing to not have middleware
 	http.HandleFunc("/.well-known/acme-challenge/ZCLfT3oIOdBK0iUF28viK2IEvmjJ46_8NzBEE0F6jxA", apiTasks.LetsEncryptValidation)
@@ -281,9 +278,6 @@ func init() {
 	http.HandleFunc("/tasks/makeUsersInactive", apiTasks.MakeUsersInactive)
 	http.HandleFunc("/tasks/removeExpiredSessions", gaeTasks.RemoveExpiredSessionsHandler)
 	http.HandleFunc("/tasks/removeImportedFiles", tabulaeTasks.RemoveImportedFilesHandler)
-
-	// One-off tasks
-	// http.HandleFunc("/tasks/listsToIncludeTeamId", tasks.ListsToIncludeTeamId)
 
 	/*
 	 * Appengine Handler
