@@ -106,14 +106,6 @@ func init() {
 	router.GET("/api/auth/remove-gmail", auth.RemoveGmailHandler)
 	router.GET("/api/auth/googlecallback", auth.GoogleCallbackHandler)
 
-	// Internal auth: Linkedin
-	router.GET("/api/internal_auth/linkedin", auth.LinkedinLoginHandler)
-	router.GET("/api/internal_auth/linkedincallback", auth.LinkedinCallbackHandler)
-
-	// Internal auth: Instagram
-	router.GET("/api/internal_auth/instagram", auth.InstagramLoginHandler)
-	router.GET("/api/internal_auth/instagramcallback", auth.InstagramCallbackHandler)
-
 	// Login with Outlook
 	router.GET("/api/auth/outlook", auth.OutlookLoginHandler)
 	router.GET("/api/auth/remove-outlook", auth.RemoveOutlookHandler)
