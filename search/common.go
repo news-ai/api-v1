@@ -72,6 +72,12 @@ type ElasticIsSentQuery struct {
 	} `json:"term"`
 }
 
+type ElasticIsDeletedQuery struct {
+	Term struct {
+		IsDeleted bool `json:"data.IsDeleted"`
+	} `json:"term"`
+}
+
 type ElasticCancelQuery struct {
 	Term struct {
 		Cancel bool `json:"data.Cancel"`
