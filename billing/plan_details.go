@@ -68,5 +68,5 @@ func StripePlanIdToMaximumEmailSent(stripePlanId string) int {
 		return 100
 	}
 
-	return 10000
+	return 20000
 }

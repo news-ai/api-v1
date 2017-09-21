@@ -30,8 +30,6 @@ var Store = gaesessions.NewMemcacheDatastoreStore("", "",
 
 func SetRedirectURL() {
 	googleOauthConfig.RedirectURL = utils.APIURL + "/auth/googlecallback"
-	linkedinOauthConfig.RedirectURL = utils.APIURL + "/internal_auth/linkedincallback"
-	instagramOauthConfig.RedirectURL = utils.APIURL + "/internal_auth/instagramcallback"
 }
 
 // Gets the email of the current user that is logged in

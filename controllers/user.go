@@ -1092,3 +1092,58 @@ func SetUser(c context.Context, r *http.Request, userId int64) (models.User, err
 	gcontext.Set(r, "user", user)
 	return user, nil
 }
+
+func UpdateUserEmail(c context.Context, r *http.Request, id string) (models.User, interface{}, error) {
+	user := models.User{}
+	err := errors.New("")
+
+	switch id {
+	case "me":
+		user, err = GetCurrentUser(c, r)
+		if err != nil {
+			log.Errorf(c, "%v", err)
+			return models.User{}, nil, err
+		}
+	default:
+		userId, err := utilities.StringIdToInt(id)
+		if err != nil {
+			log.Errorf(c, "%v", err)
+			return models.User{}, nil, err
+		}
+		user, err = getUser(c, r, userId)
+		if err != nil {
+			log.Errorf(c, "%v", err)
+			return models.User{}, nil, err
+		}
+	}
+
+	currentUser, err := GetCurrentUser(c, r)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return models.User{}, nil, err
+	}
+
+	if !permissions.AccessToObject(user.Id, currentUser.Id) && !currentUser.IsAdmin {
+		err = errors.New("Forbidden")
+		log.Errorf(c, "%v", err)
+		return models.User{}, nil, err
+	}
+
+	buf, _ := ioutil.ReadAll(r.Body)
+	decoder := ffjson.NewDecoder()
+	var updatedUser models.User
+	err = decoder.Decode(buf, &updatedUser)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return models.User{}, nil, err
+	}
+
+	// If new user wants to get daily emails
+	if updatedUser.Email != "" {
+		user.Email = updatedUser.Email
+	}
+
+	user.Save(c)
+	sync.ResourceSync(r, user.Id, "User", "create")
+	return user, nil, nil
+}

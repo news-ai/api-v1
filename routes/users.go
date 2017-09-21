@@ -51,6 +51,8 @@ func handleUserActions(c context.Context, r *http.Request, id string, action str
 			return api.BaseSingleResponseHandler(controllers.AddPlanToUser(c, r, id))
 		case "profile":
 			return api.BaseSingleResponseHandler(pitchControllers.CreateUserProfile(c, r, id))
+		case "change-email":
+			return api.BaseSingleResponseHandler(controllers.UpdateUserEmail(c, r, id))
 		}
 	case "PATCH":
 		switch action {
