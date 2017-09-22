@@ -191,6 +191,21 @@ indexes:
 
 - kind: Email
   properties:
-  - name: To
-  - name: Created
-    direction: desc
+    - name: To
+    - name: Created
+      direction: desc
+
+- kind: MediaList
+  properties:
+    - name: Archived
+    - name: CreatedBy
+    - name: PublicList
+    - name: Name
+
+- kind: MediaList
+  properties:
+    - name: Archived
+    - name: CreatedBy
+    - name: PublicList
+    - name: Name
+      direction: desc
