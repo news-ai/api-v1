@@ -209,3 +209,18 @@ indexes:
     - name: PublicList
     - name: Name
       direction: desc
+
+- kind: MediaList
+  properties:
+    - name: Archived
+    - name: CreatedBy
+    - name: PublicList
+    - name: Updated
+
+- kind: MediaList
+  properties:
+    - name: Archived
+    - name: CreatedBy
+    - name: PublicList
+    - name: Updated
+      direction: desc
