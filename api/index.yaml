@@ -224,3 +224,9 @@ indexes:
     - name: PublicList
     - name: Updated
       direction: desc
+
+- kind: Email
+  properties:
+    - name: GmailId
+    - name: SendGridId
+    - name: SendAt
