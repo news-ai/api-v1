@@ -18,9 +18,9 @@ import (
 	"github.com/pquerna/ffjson/ffjson"
 	"github.com/qedus/nds"
 
-	"github.com/news-ai/api/billing"
+	"github.com/news-ai/api-v1/billing"
 
-	"github.com/news-ai/api/models"
+	"github.com/news-ai/api-v1/models"
 	"github.com/news-ai/tabulae/emails"
 	"github.com/news-ai/tabulae/sync"
 

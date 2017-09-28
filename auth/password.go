@@ -14,8 +14,8 @@ import (
 	"google.golang.org/appengine/log"
 	"google.golang.org/appengine/urlfetch"
 
-	apiControllers "github.com/news-ai/api/controllers"
-	apiModels "github.com/news-ai/api/models"
+	apiControllers "github.com/news-ai/api-v1/controllers"
+	apiModels "github.com/news-ai/api-v1/models"
 
 	"golang.org/x/net/context"
 

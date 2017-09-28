@@ -1,4 +1,4 @@
-package api
+package main
 
 import (
 	"net/http"
@@ -12,10 +12,10 @@ import (
 	"github.com/unrolled/secure"
 
 	// API Common Imports
-	"github.com/news-ai/api/auth"
-	"github.com/news-ai/api/middleware"
-	apiRoutes "github.com/news-ai/api/routes"
-	"github.com/news-ai/api/utils"
+	"github.com/news-ai/api-v1/auth"
+	"github.com/news-ai/api-v1/middleware"
+	apiRoutes "github.com/news-ai/api-v1/routes"
+	"github.com/news-ai/api-v1/utils"
 
 	"github.com/news-ai/web/api"
 	commonMiddleware "github.com/news-ai/web/middleware"

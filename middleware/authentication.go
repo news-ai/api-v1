@@ -6,9 +6,9 @@ import (
 
 	"google.golang.org/appengine"
 
-	"github.com/news-ai/api/auth"
-	apiControllers "github.com/news-ai/api/controllers"
-	"github.com/news-ai/api/utils"
+	"github.com/news-ai/api-v1/auth"
+	apiControllers "github.com/news-ai/api-v1/controllers"
+	"github.com/news-ai/api-v1/utils"
 
 	"github.com/news-ai/web/errors"
 )

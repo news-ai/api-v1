@@ -13,7 +13,7 @@ import (
 
 	"github.com/julienschmidt/httprouter"
 
-	apiControllers "github.com/news-ai/api/controllers"
+	apiControllers "github.com/news-ai/api-v1/controllers"
 
 	"github.com/news-ai/oauth2/outlook"
 	"github.com/news-ai/web/utilities"

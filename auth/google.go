@@ -13,8 +13,8 @@ import (
 
 	"github.com/julienschmidt/httprouter"
 
-	apiControllers "github.com/news-ai/api/controllers"
-	apiModels "github.com/news-ai/api/models"
+	apiControllers "github.com/news-ai/api-v1/controllers"
+	apiModels "github.com/news-ai/api-v1/models"
 
 	"github.com/news-ai/tabulae/controllers"
 	"github.com/news-ai/tabulae/emails"

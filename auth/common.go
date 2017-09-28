@@ -9,7 +9,7 @@ import (
 
 	"github.com/news-ai/gaesessions"
 
-	"github.com/news-ai/api/utils"
+	"github.com/news-ai/api-v1/utils"
 )
 
 type User struct {
