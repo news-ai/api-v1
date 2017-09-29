@@ -17,6 +17,7 @@ func CreateSchema() error {
 }
 
 func GetUsers() ([]models.User, interface{}, int, int, error) {
+	CreateSchema()
 	users := []models.User{}
 	err := db.DB.Model(&users).Select()
 	if err != nil {
