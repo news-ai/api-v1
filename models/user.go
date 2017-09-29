@@ -1,43 +1,13 @@
 package models
 
 import (
+	"log"
 	"net/http"
 	"strings"
 	"time"
 
 	"golang.org/x/net/context"
-
-	"google.golang.org/appengine/log"
-
-	"github.com/qedus/nds"
 )
-
-type UserFeedback struct {
-	ReasonNotPurchase  string `json:"reason"`
-	FeedbackAfterTrial string `json:"feedback"`
-}
-
-type UserPlan struct {
-	PlanName string `json:"planname"`
-
-	EmailAccounts      int `json:"emailaccounts"`
-	DailyEmailsAllowed int `json:"dailyemailsallowed"`
-
-	EmailsSentToday int `json:"emailssenttoday"`
-
-	OnTrial bool `json:"ontrial"`
-}
-
-type UserNewPlan struct {
-	Plan     string `json:"plan"`
-	Duration string `json:"duration"`
-	Coupon   string `json:"coupon"`
-}
-
-type UserLiveToken struct {
-	Token   string    `json:"token"`
-	Expires time.Time `json:"expires"`
-}
 
 type User struct {
 	Base
@@ -168,7 +138,7 @@ func (u *User) Save(c context.Context) (*User, error) {
 
 	k, err := nds.Put(c, u.BaseKey(c, "User"), u)
 	if err != nil {
-		log.Errorf(c, "%v", err)
+		log.Printf("%v", err)
 		return nil, err
 	}
 	u.Id = k.IntID()
@@ -180,7 +150,7 @@ func (u *User) ConfirmEmail(c context.Context) (*User, error) {
 	u.ConfirmationCode = ""
 	_, err := u.Save(c)
 	if err != nil {
-		log.Errorf(c, "%v", err)
+		log.Printf("%v", err)
 		return u, err
 	}
 	return u, nil
@@ -190,36 +160,8 @@ func (u *User) ConfirmLoggedIn(c context.Context) (*User, error) {
 	u.LastLoggedIn = time.Now()
 	_, err := u.Save(c)
 	if err != nil {
-		log.Errorf(c, "%v", err)
+		log.Printf("%v", err)
 		return u, err
 	}
 	return u, nil
-}
-
-func (u *User) SetStripeId(c context.Context, r *http.Request, currentUser User, stripeId string, stripePlanId string, isActive bool, isTrial bool) (*User, int64, error) {
-	billing := Billing{}
-	billing.StripeId = stripeId
-	billing.StripePlanId = stripePlanId
-
-	if isTrial {
-		expires := time.Now().Add(time.Hour * 24 * 7 * time.Duration(1))
-		billing.HasTrial = true
-		billing.IsOnTrial = true
-		billing.Expires = expires
-	}
-
-	_, err := billing.Create(c, r, currentUser)
-	if err != nil {
-		log.Errorf(c, "%v", err)
-		return u, 0, err
-	}
-
-	u.BillingId = billing.Id
-	u.IsActive = isActive
-	_, err = u.Save(c)
-	if err != nil {
-		log.Errorf(c, "%v", err)
-		return u, 0, err
-	}
-	return u, billing.Id, nil
 }

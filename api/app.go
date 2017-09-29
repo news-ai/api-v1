@@ -29,7 +29,6 @@ func main() {
 
 	// Initialize router
 	router := httprouter.New()
-
 	router.NotFound = http.HandlerFunc(api.NotFound)
 
 	// Not found Handler
