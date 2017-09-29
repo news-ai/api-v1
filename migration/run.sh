@@ -1,0 +1,1 @@
+go run migration.go users.go createModels.go
