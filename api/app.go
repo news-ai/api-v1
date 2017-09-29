@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log"
 	"net/http"
 
 	"github.com/codegangsta/negroni"
@@ -8,10 +9,14 @@ import (
 	"github.com/julienschmidt/httprouter"
 	"github.com/rs/cors"
 
+	"github.com/news-ai/api-v1/db"
+
 	"github.com/news-ai/web/api"
 )
 
 func main() {
+	db.InitDB()
+
 	// Setting up Negroni Router
 	app := negroni.New()
 	app.Use(negroni.NewRecovery())
