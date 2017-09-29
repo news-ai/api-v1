@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"golang.org/x/net/context"
+	"github.com/news-ai/api-v1/db"
 )
 
 type User struct {
@@ -116,7 +116,7 @@ func (u *User) Normalize() (*User, error) {
 	return u, nil
 }
 
-func (u *User) Create(c context.Context, r *http.Request) (*User, error) {
+func (u *User) Create(r *http.Request) (*User, error) {
 	// Create user
 	u.IsAdmin = false
 	u.GetDailyEmails = true
@@ -124,7 +124,7 @@ func (u *User) Create(c context.Context, r *http.Request) (*User, error) {
 
 	u.Normalize()
 
-	_, err := u.Save(c)
+	_, err := u.Save()
 	return u, err
 }
 
@@ -133,22 +133,21 @@ func (u *User) Create(c context.Context, r *http.Request) (*User, error) {
  */
 
 // Function to save a new user into App Engine
-func (u *User) Save(c context.Context) (*User, error) {
+func (u *User) Save() (*User, error) {
 	u.Updated = time.Now()
 
-	k, err := nds.Put(c, u.BaseKey(c, "User"), u)
-	if err != nil {
-		log.Printf("%v", err)
-		return nil, err
-	}
-	u.Id = k.IntID()
-	return u, nil
+	_, err := db.DB.QueryOne(u, `
+			INSERT INTO users () VALUES ()
+			RETURNING id
+		`, u)
+
+	return u, err
 }
 
-func (u *User) ConfirmEmail(c context.Context) (*User, error) {
+func (u *User) ConfirmEmail() (*User, error) {
 	u.EmailConfirmed = true
 	u.ConfirmationCode = ""
-	_, err := u.Save(c)
+	_, err := u.Save()
 	if err != nil {
 		log.Printf("%v", err)
 		return u, err
@@ -156,9 +155,9 @@ func (u *User) ConfirmEmail(c context.Context) (*User, error) {
 	return u, nil
 }
 
-func (u *User) ConfirmLoggedIn(c context.Context) (*User, error) {
+func (u *User) ConfirmLoggedIn() (*User, error) {
 	u.LastLoggedIn = time.Now()
-	_, err := u.Save(c)
+	_, err := u.Save()
 	if err != nil {
 		log.Printf("%v", err)
 		return u, err

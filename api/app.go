@@ -1,7 +1,6 @@
 package main
 
 import (
-	"log"
 	"net/http"
 
 	"github.com/codegangsta/negroni"
@@ -10,6 +9,7 @@ import (
 	"github.com/rs/cors"
 
 	"github.com/news-ai/api-v1/db"
+	"github.com/news-ai/api-v1/routes"
 
 	"github.com/news-ai/web/api"
 )
@@ -39,6 +39,8 @@ func main() {
 	// Not found Handler
 	router.GET("/", api.NotFoundHandler)
 	router.GET("/api", api.NotFoundHandler)
+
+	router.GET("/api/users", routes.UsersHandler)
 
 	app.UseHandler(router)
 

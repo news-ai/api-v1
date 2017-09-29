@@ -8,6 +8,7 @@ var DB *pg.DB
 
 func InitDB() {
 	DB = pg.Connect(&pg.Options{
-		User: "postgres",
+		User:     "abhiagarwal",
+		Database: "abhiagarwal",
 	})
 }
