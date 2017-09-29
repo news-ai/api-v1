@@ -17,12 +17,11 @@ func CreateSchema() error {
 }
 
 func GetUsers() ([]models.User, interface{}, int, int, error) {
-	CreateSchema()
 	users := []models.User{}
 	err := db.DB.Model(&users).Select()
 	if err != nil {
 		log.Printf("%v", err)
 	}
 
-	return users, nil, 0, 0, err
+	return users, nil, 0, 0, nil
 }

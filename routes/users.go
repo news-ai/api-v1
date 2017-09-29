@@ -2,6 +2,7 @@ package routes
 
 import (
 	"errors"
+	"log"
 	"net/http"
 
 	"github.com/julienschmidt/httprouter"
@@ -26,6 +27,8 @@ func handleUsers(r *http.Request) (interface{}, error) {
 func UsersHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	w.Header().Set("Content-Type", "application/json")
 	val, err := handleUsers(r)
+
+	log.Printf("error: %v", err)
 
 	if err == nil {
 		err = ffjson.NewEncoder(w).Encode(val)

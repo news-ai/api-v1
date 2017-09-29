@@ -12,6 +12,7 @@ import (
 	"github.com/news-ai/api-v1/routes"
 
 	"github.com/news-ai/web/api"
+	commonMiddleware "github.com/news-ai/web/middleware"
 )
 
 func main() {
@@ -42,6 +43,7 @@ func main() {
 
 	router.GET("/api/users", routes.UsersHandler)
 
+	app.Use(negroni.HandlerFunc(commonMiddleware.AttachParameters))
 	app.UseHandler(router)
 
 	// Register the app router
