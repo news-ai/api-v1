@@ -17,5 +17,6 @@ func initDB() {
 
 func main() {
 	initDB()
-	createSchema()
+	getDatastoreAndInsertIntoPostgres()
+	// createSchema()
 }

@@ -17,10 +17,16 @@ func CreateSchema() error {
 }
 
 func GetUsers() ([]models.User, interface{}, int, int, error) {
-	users := []models.User{}
-	err := db.DB.Model(&users).Select()
+	postgresUsers := []models.UserPostgres{}
+	err := db.DB.Model(&postgresUsers).Select()
 	if err != nil {
 		log.Printf("%v", err)
+	}
+
+	users := []models.User{}
+	for i := 0; i < len(postgresUsers); i++ {
+		postgresUsers[i].Data.Id = postgresUsers[i].Id
+		users = append(users, postgresUsers[i].Data)
 	}
 
 	return users, nil, 0, 0, nil

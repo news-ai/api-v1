@@ -99,6 +99,12 @@ type User struct {
 	EnhanceCredits int `json:"-"`
 }
 
+type UserPostgres struct {
+	Id int64
+
+	Data User
+}
+
 /*
 * Public methods
  */
