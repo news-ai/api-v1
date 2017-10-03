@@ -1,12 +1,7 @@
 package controllers
 
 import (
-	"net/http"
 	"strings"
-
-	"google.golang.org/appengine/datastore"
-
-	gcontext "github.com/gorilla/context"
 )
 
 // At some point automate this
@@ -58,26 +53,6 @@ func normalizeOrderQuery(order string) string {
 	return operator + order
 }
 
-func ConstructQuery(query *datastore.Query, r *http.Request) *datastore.Query {
-	order := gcontext.Get(r, "order").(string)
-	offset := gcontext.Get(r, "offset").(int)
-	limit := gcontext.Get(r, "limit").(int)
-	after := gcontext.Get(r, "after").(string)
+func ConstructQuery() {
 
-	query = query.Limit(limit)
-
-	if order != "" {
-		query = query.Order(normalizeOrderQuery(order))
-	}
-
-	if after != "" {
-		cursor, err := datastore.DecodeCursor(after)
-		if err == nil {
-			query = query.Start(cursor)
-		}
-	} else {
-		query = query.Offset(offset)
-	}
-
-	return query
 }

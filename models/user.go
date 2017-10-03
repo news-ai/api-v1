@@ -5,8 +5,6 @@ import (
 	"net/http"
 	"strings"
 	"time"
-
-	"github.com/news-ai/api-v1/db"
 )
 
 type User struct {
@@ -135,13 +133,7 @@ func (u *User) Create(r *http.Request) (*User, error) {
 // Function to save a new user into App Engine
 func (u *User) Save() (*User, error) {
 	u.Updated = time.Now()
-
-	_, err := db.DB.QueryOne(u, `
-			INSERT INTO users () VALUES ()
-			RETURNING id
-		`, u)
-
-	return u, err
+	return u, nil
 }
 
 func (u *User) ConfirmEmail() (*User, error) {
