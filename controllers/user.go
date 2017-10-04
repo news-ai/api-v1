@@ -7,15 +7,6 @@ import (
 	"github.com/news-ai/api-v1/models"
 )
 
-func CreateSchema() error {
-	err := db.DB.CreateTable(&models.User{}, nil)
-	if err != nil {
-		log.Printf("%v", err)
-	}
-
-	return err
-}
-
 func GetUsers() ([]models.User, interface{}, int, int, error) {
 	postgresUsers := []models.UserPostgres{}
 	err := db.DB.Model(&postgresUsers).Select()

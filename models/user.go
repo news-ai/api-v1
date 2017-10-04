@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/news-ai/api-v1/db"
 )
 
 type User struct {
@@ -113,18 +115,18 @@ type UserPostgres struct {
 * Create methods
  */
 
-func (u *User) Normalize() (*User, error) {
-	u.Email = strings.ToLower(u.Email)
-	u.FirstName = strings.Title(u.FirstName)
-	u.LastName = strings.Title(u.LastName)
+func (u *UserPostgres) Normalize() (*UserPostgres, error) {
+	u.Data.Email = strings.ToLower(u.Data.Email)
+	u.Data.FirstName = strings.Title(u.Data.FirstName)
+	u.Data.LastName = strings.Title(u.Data.LastName)
 	return u, nil
 }
 
-func (u *User) Create(r *http.Request) (*User, error) {
+func (u *UserPostgres) Create() (*UserPostgres, error) {
 	// Create user
-	u.IsAdmin = false
-	u.GetDailyEmails = true
-	u.Created = time.Now()
+	u.Data.IsAdmin = false
+	u.Data.GetDailyEmails = true
+	u.Data.Created = time.Now()
 
 	u.Normalize()
 
@@ -137,14 +139,15 @@ func (u *User) Create(r *http.Request) (*User, error) {
  */
 
 // Function to save a new user into App Engine
-func (u *User) Save() (*User, error) {
-	u.Updated = time.Now()
-	return u, nil
+func (u *UserPostgres) Save() (*UserPostgres, error) {
+	u.Data.Updated = time.Now()
+	err := db.DB.Update(&u)
+	return u, err
 }
 
-func (u *User) ConfirmEmail() (*User, error) {
-	u.EmailConfirmed = true
-	u.ConfirmationCode = ""
+func (u *UserPostgres) ConfirmEmail() (*UserPostgres, error) {
+	u.Data.EmailConfirmed = true
+	u.Data.ConfirmationCode = ""
 	_, err := u.Save()
 	if err != nil {
 		log.Printf("%v", err)
@@ -153,8 +156,8 @@ func (u *User) ConfirmEmail() (*User, error) {
 	return u, nil
 }
 
-func (u *User) ConfirmLoggedIn() (*User, error) {
-	u.LastLoggedIn = time.Now()
+func (u *UserPostgres) ConfirmLoggedIn() (*UserPostgres, error) {
+	u.Data.LastLoggedIn = time.Now()
 	_, err := u.Save()
 	if err != nil {
 		log.Printf("%v", err)
