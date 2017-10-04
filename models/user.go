@@ -8,6 +8,33 @@ import (
 	"github.com/news-ai/api-v1/db"
 )
 
+type UserFeedback struct {
+	ReasonNotPurchase  string `json:"reason"`
+	FeedbackAfterTrial string `json:"feedback"`
+}
+
+type UserPlan struct {
+	PlanName string `json:"planname"`
+
+	EmailAccounts      int `json:"emailaccounts"`
+	DailyEmailsAllowed int `json:"dailyemailsallowed"`
+
+	EmailsSentToday int `json:"emailssenttoday"`
+
+	OnTrial bool `json:"ontrial"`
+}
+
+type UserNewPlan struct {
+	Plan     string `json:"plan"`
+	Duration string `json:"duration"`
+	Coupon   string `json:"coupon"`
+}
+
+type UserLiveToken struct {
+	Token   string    `json:"token"`
+	Expires time.Time `json:"expires"`
+}
+
 type User struct {
 	Base
 
@@ -84,9 +111,7 @@ type User struct {
 
 	PromoCode string `json:"-"`
 
-	IsAdmin bool `json:"-"`
-
-	TabulaeV2 bool `json:"tabulaev2"`
+	IsAdmin bool `json:"isadmin"`
 
 	IsActive            bool `json:"isactive"`
 	IsBanned            bool `json:"isbanned"`
@@ -140,7 +165,7 @@ func (u *UserPostgres) Create() (*UserPostgres, error) {
 // Function to save a new user into App Engine
 func (u *UserPostgres) Save() (*UserPostgres, error) {
 	u.Data.Updated = time.Now()
-	err := db.DB.Update(&u)
+	_, err := db.DB.Model(u).Set("data = ?data").Where("id = ?id").Returning("*").Update()
 	return u, err
 }
 

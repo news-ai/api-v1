@@ -1,6 +1,9 @@
 package db
 
 import (
+	"log"
+	"time"
+
 	"github.com/go-pg/pg"
 )
 
@@ -12,5 +15,14 @@ func InitDB() {
 		User:     "newsaiapitest",
 		Database: "api",
 		Password: "*Q4MQNCbtlLyP",
+	})
+
+	DB.OnQueryProcessed(func(event *pg.QueryProcessedEvent) {
+		query, err := event.FormattedQuery()
+		if err != nil {
+			panic(err)
+		}
+
+		log.Printf("%s %s", time.Since(event.StartTime), query)
 	})
 }
