@@ -376,7 +376,44 @@ func AddPlanToUser(r *http.Request, id string) (models.UserPostgres, interface{}
 		return models.UserPostgres{}, nil, err
 	}
 
-	return postgresUser, nil, nil
+	userBilling, err := GetUserBilling(r, postgresUser)
+	if err != nil {
+		return models.UserPostgres{}, nil, err
+	}
+
+	if len(userBilling.CardsOnFile) == 0 {
+		return postgresUser, userBilling, errors.New("This user has no cards on file")
+	}
+
+	originalPlan := ""
+	switch userNewPlan.Plan {
+	case "bronze":
+		originalPlan = "Personal"
+	case "silver-1":
+		originalPlan = "Freelancer"
+	case "gold-1":
+		originalPlan = "Business"
+	}
+
+	if userNewPlan.Duration != "monthly" && userNewPlan.Duration != "annually" {
+		return postgresUser, userBilling, errors.New("Duration is invalid")
+	}
+
+	if userNewPlan.Plan == "" {
+		return postgresUser, userBilling, errors.New("Plan is invalid")
+	}
+
+	if originalPlan == "" {
+		return postgresUser, userBilling, errors.New("Original Plan is invalid")
+	}
+
+	err = billing.AddPlanToUser(r, postgresUser, &userBilling, userNewPlan.Plan, userNewPlan.Duration, userNewPlan.Coupon, originalPlan)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return postgresUser, userBilling, err
+	}
+
+	return postgresUser, userBilling, nil
 }
 
 func Update(r *http.Request, u *models.UserPostgres) (*models.UserPostgres, error) {

@@ -8,22 +8,22 @@ import (
 type Billing struct {
 	Base
 
-	StripeId     string    `json:"-"`
-	StripePlanId string    `json:"-"`
-	Expires      time.Time `json:"-"`
-	HasTrial     bool      `json:"-"`
-	IsOnTrial    bool      `json:"-"`
-	IsAgency     bool      `json:"-"`
-	IsCancel     bool      `json:"-"`
+	StripeId     string    `json:"stripeid"`
+	StripePlanId string    `json:"stripeplanid"`
+	Expires      time.Time `json:"expires"`
+	HasTrial     bool      `json:"hastrial"`
+	IsOnTrial    bool      `json:"isontrial"`
+	IsAgency     bool      `json:"isagency"`
+	IsCancel     bool      `json:"iscancel"`
 
-	ReasonForCancel string `json:"-"`
+	ReasonForCancel string `json:"reasonforcancel"`
 
-	ReasonNotPurchase  string `json:"-"`
-	FeedbackAfterTrial string `json:"-"`
+	ReasonNotPurchase  string `json:"reasonnotpurchase"`
+	FeedbackAfterTrial string `json:"feedbackaftertrial"`
 
 	TrialEmailSent bool `json:"-"`
 
-	CardsOnFile []string `json:"-"`
+	CardsOnFile []string `json:"cardsonfile"`
 }
 
 /*
