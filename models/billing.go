@@ -3,6 +3,8 @@ package models
 import (
 	"net/http"
 	"time"
+
+	"github.com/news-ai/api-v1/db"
 )
 
 type Billing struct {
@@ -26,6 +28,12 @@ type Billing struct {
 	CardsOnFile []string `json:"cardsonfile"`
 }
 
+type BillingPostgres struct {
+	Id int64
+
+	Data Billing
+}
+
 /*
 * Public methods
  */
@@ -34,10 +42,10 @@ type Billing struct {
 * Create methods
  */
 
-func (bi *Billing) Create(r *http.Request, currentUser User) (*Billing, error) {
-	bi.CreatedBy = currentUser.Id
-	bi.Created = time.Now()
-	_, err := bi.Save()
+func (bi *BillingPostgres) Create(r *http.Request, currentUser User) (*BillingPostgres, error) {
+	bi.Data.CreatedBy = currentUser.Id
+	bi.Data.Created = time.Now()
+	_, err := db.DB.Model(bi).Returning("*").Insert()
 	return bi, err
 }
 
@@ -46,8 +54,9 @@ func (bi *Billing) Create(r *http.Request, currentUser User) (*Billing, error) {
  */
 
 // Function to save a new billing into App Engine
-func (bi *Billing) Save() (*Billing, error) {
+func (bi *BillingPostgres) Save() (*BillingPostgres, error) {
 	// Update the Updated time
-	bi.Updated = time.Now()
-	return bi, nil
+	bi.Data.Updated = time.Now()
+	_, err := db.DB.Model(bi).Set("data = ?data").Where("id = ?id").Returning("*").Update()
+	return bi, err
 }

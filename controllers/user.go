@@ -9,6 +9,7 @@ import (
 	gcontext "github.com/gorilla/context"
 	"github.com/pquerna/ffjson/ffjson"
 
+	"github.com/news-ai/api-v1/billing"
 	"github.com/news-ai/api-v1/db"
 	"github.com/news-ai/api-v1/models"
 
@@ -331,7 +332,7 @@ func AddUserToContext(r *http.Request, email string) {
 	}
 }
 
-func AddPlanToUser(r *http.Request, id string) (models.UserPostgres, interface{}, error) {
+func AddPlanToUser(r *http.Request, id string) (models.User, interface{}, error) {
 	postgresUser := models.UserPostgres{}
 	err := errors.New("")
 
@@ -340,31 +341,31 @@ func AddPlanToUser(r *http.Request, id string) (models.UserPostgres, interface{}
 		postgresUser, err = GetCurrentUser(r)
 		if err != nil {
 			log.Printf("%v", err)
-			return models.UserPostgres{}, nil, err
+			return models.User{}, nil, err
 		}
 	default:
 		userId, err := utilities.StringIdToInt(id)
 		if err != nil {
 			log.Printf("%v", err)
-			return models.UserPostgres{}, nil, err
+			return models.User{}, nil, err
 		}
 		postgresUser, err = getUser(r, userId)
 		if err != nil {
 			log.Printf("%v", err)
-			return models.UserPostgres{}, nil, err
+			return models.User{}, nil, err
 		}
 	}
 
 	currentUser, err := GetCurrentUser(r)
 	if err != nil {
 		log.Printf("%v", err)
-		return models.UserPostgres{}, nil, err
+		return models.User{}, nil, err
 	}
 
 	if !currentUser.Data.IsAdmin {
 		err = errors.New("Forbidden")
 		log.Printf("%v", err)
-		return models.UserPostgres{}, nil, err
+		return models.User{}, nil, err
 	}
 
 	buf, _ := ioutil.ReadAll(r.Body)
@@ -373,16 +374,16 @@ func AddPlanToUser(r *http.Request, id string) (models.UserPostgres, interface{}
 	err = decoder.Decode(buf, &userNewPlan)
 	if err != nil {
 		log.Printf("%v", err)
-		return models.UserPostgres{}, nil, err
+		return models.User{}, nil, err
 	}
 
 	userBilling, err := GetUserBilling(r, postgresUser)
 	if err != nil {
-		return models.UserPostgres{}, nil, err
+		return models.User{}, nil, err
 	}
 
-	if len(userBilling.CardsOnFile) == 0 {
-		return postgresUser, userBilling, errors.New("This user has no cards on file")
+	if len(userBilling.Data.CardsOnFile) == 0 {
+		return models.User{}, nil, errors.New("This user has no cards on file")
 	}
 
 	originalPlan := ""
@@ -396,24 +397,24 @@ func AddPlanToUser(r *http.Request, id string) (models.UserPostgres, interface{}
 	}
 
 	if userNewPlan.Duration != "monthly" && userNewPlan.Duration != "annually" {
-		return postgresUser, userBilling, errors.New("Duration is invalid")
+		return models.User{}, nil, errors.New("Duration is invalid")
 	}
 
 	if userNewPlan.Plan == "" {
-		return postgresUser, userBilling, errors.New("Plan is invalid")
+		return models.User{}, nil, errors.New("Plan is invalid")
 	}
 
 	if originalPlan == "" {
-		return postgresUser, userBilling, errors.New("Original Plan is invalid")
+		return models.User{}, nil, errors.New("Original Plan is invalid")
 	}
 
 	err = billing.AddPlanToUser(r, postgresUser, &userBilling, userNewPlan.Plan, userNewPlan.Duration, userNewPlan.Coupon, originalPlan)
 	if err != nil {
-		log.Errorf(c, "%v", err)
-		return postgresUser, userBilling, err
+		log.Printf("%v", err)
+		return models.User{}, nil, err
 	}
 
-	return postgresUser, userBilling, nil
+	return postgresUser.Data, userBilling.Data, nil
 }
 
 func Update(r *http.Request, u *models.UserPostgres) (*models.UserPostgres, error) {

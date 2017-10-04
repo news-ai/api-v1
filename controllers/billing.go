@@ -8,7 +8,7 @@ import (
 	"github.com/news-ai/api-v1/models"
 )
 
-func GetUserBilling(r *http.Request, userPostgres models.UserPostgres) (models.Billing, error) {
+func GetUserBilling(r *http.Request, userPostgres models.UserPostgres) (models.BillingPostgres, error) {
 	if userPostgres.Data.BillingId == 0 {
 		return models.Billing{}, errors.New("No billing for this user")
 	}
