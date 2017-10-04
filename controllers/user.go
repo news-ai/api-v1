@@ -31,3 +31,15 @@ func GetUsers() ([]models.User, interface{}, int, int, error) {
 
 	return users, nil, 0, 0, nil
 }
+
+func GetUser(id string) (models.User, interface{}, error) {
+	postgresUser := models.UserPostgres{}
+	err := db.DB.Model(&postgresUser).Where("id = ?", id).Select()
+	if err != nil {
+		log.Printf("%v", err)
+		return models.User{}, nil, err
+	}
+
+	postgresUser.Data.Id = postgresUser.Id
+	return postgresUser.Data, nil, nil
+}

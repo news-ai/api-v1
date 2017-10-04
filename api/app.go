@@ -42,6 +42,7 @@ func main() {
 	router.GET("/api", api.NotFoundHandler)
 
 	router.GET("/api/users", routes.UsersHandler)
+	router.GET("/api/users/:id", routes.UserHandler)
 
 	app.Use(negroni.HandlerFunc(commonMiddleware.AttachParameters))
 	app.UseHandler(router)
