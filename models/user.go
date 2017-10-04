@@ -2,7 +2,6 @@ package models
 
 import (
 	"log"
-	"net/http"
 	"strings"
 	"time"
 

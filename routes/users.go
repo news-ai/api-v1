@@ -17,7 +17,7 @@ import (
 func handleUser(r *http.Request, id string) (interface{}, error) {
 	switch r.Method {
 	case "GET":
-		return api.BaseSingleResponseHandler(controllers.GetUser(id))
+		return api.BaseSingleResponseHandler(controllers.GetUser(r, id))
 	}
 	return nil, errors.New("method not implemented")
 }

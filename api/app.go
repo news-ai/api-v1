@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log"
 	"net/http"
 
 	"github.com/codegangsta/negroni"
@@ -8,15 +9,25 @@ import (
 	"github.com/julienschmidt/httprouter"
 	"github.com/rs/cors"
 
+	"github.com/news-ai/api-v1/auth"
 	"github.com/news-ai/api-v1/db"
+	"github.com/news-ai/api-v1/middleware"
 	"github.com/news-ai/api-v1/routes"
+	"github.com/news-ai/api-v1/utils"
 
 	"github.com/news-ai/web/api"
 	commonMiddleware "github.com/news-ai/web/middleware"
 )
 
 func main() {
+	// Setup database & URL
 	db.InitDB()
+	utils.InitURL()
+	err := auth.SetupAuthStore()
+	if err != nil {
+		log.Printf("%v", err)
+		return
+	}
 
 	// Setting up Negroni Router
 	app := negroni.New()
@@ -41,9 +52,20 @@ func main() {
 	router.GET("/", api.NotFoundHandler)
 	router.GET("/api", api.NotFoundHandler)
 
+	/*
+	 * Authentication Handler
+	 */
+
+	// Login with Google
+	router.GET("/api/auth/google", auth.GoogleLoginHandler)
+	router.GET("/api/auth/gmail", auth.GmailLoginHandler)
+	router.GET("/api/auth/remove-gmail", auth.RemoveGmailHandler)
+	router.GET("/api/auth/googlecallback", auth.GoogleCallbackHandler)
+
 	router.GET("/api/users", routes.UsersHandler)
 	router.GET("/api/users/:id", routes.UserHandler)
 
+	app.Use(negroni.HandlerFunc(middleware.UpdateOrCreateUser))
 	app.Use(negroni.HandlerFunc(commonMiddleware.AttachParameters))
 	app.UseHandler(router)
 
