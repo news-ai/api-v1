@@ -129,7 +129,7 @@ func (u *UserPostgres) Create() (*UserPostgres, error) {
 
 	u.Normalize()
 
-	_, err := u.Save()
+	_, err := db.DB.Model(u).Returning("*").Insert()
 	return u, err
 }
 
