@@ -107,7 +107,7 @@ func main() {
 	 */
 
 	// Start a free trial
-	router.Handler("GET", "/api/billing/plans/trial", CSRF(auth.TrialPlanPageHandler()))
+	router.Handler("GET", "/api/billing/plans/trial", auth.TrialPlanPageHandler())
 
 	// Get all the plans
 	router.Handler("GET", "/api/billing/plans", auth.ChoosePlanPageHandler())

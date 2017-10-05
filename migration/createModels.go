@@ -7,7 +7,7 @@ import (
 )
 
 func createSchema() {
-	for _, model := range []interface{}{&models.Agency{}, &models.Billing{}, &models.Client{}, &models.Plan{}, &models.Team{}, &models.UserPostgres{}, &models.UserEmailCode{}, &models.UserInviteCode{}} {
+	for _, model := range []interface{}{&models.Agency{}, &models.BillingPostgres{}, &models.Client{}, &models.Plan{}, &models.Team{}, &models.UserPostgres{}, &models.UserEmailCode{}, &models.UserInviteCode{}} {
 		err := dB.CreateTable(model, nil)
 		if err != nil {
 			log.Printf("%v", err)
