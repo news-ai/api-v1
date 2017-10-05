@@ -3,6 +3,8 @@ package models
 import (
 	"net/http"
 	"time"
+
+	"github.com/news-ai/api-v1/db"
 )
 
 type Client struct {
@@ -33,7 +35,7 @@ type Client struct {
 func (cl *Client) Create(r *http.Request, currentUser User) (*Client, error) {
 	cl.CreatedBy = currentUser.Id
 	cl.Created = time.Now()
-	_, err := cl.Save()
+	_, err := db.DB.Model(cl).Returning("*").Insert()
 	return cl, err
 }
 
@@ -45,5 +47,6 @@ func (cl *Client) Create(r *http.Request, currentUser User) (*Client, error) {
 func (cl *Client) Save() (*Client, error) {
 	// Update the Updated time
 	cl.Updated = time.Now()
-	return cl, nil
+	_, err := db.DB.Model(cl).Update()
+	return cl, err
 }

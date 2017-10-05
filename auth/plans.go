@@ -22,9 +22,6 @@ func TrialPlanPageHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		user, err := apiControllers.GetCurrentUser(r)
 
-		log.Printf("user %v", user)
-		log.Printf("error %v", err)
-
 		if r.URL.Query().Get("next") != "" {
 			session, _ := store.Get(r, "sess")
 			session.Values["next"] = r.URL.Query().Get("next")
@@ -63,8 +60,6 @@ func TrialPlanPageHandler() http.HandlerFunc {
 					}
 				}
 			}
-
-			log.Printf("tesT")
 
 			billingId, err := billing.AddFreeTrialToUser(r, user, "free")
 			user.Data.IsActive = true
