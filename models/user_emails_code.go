@@ -26,7 +26,7 @@ type UserEmailCode struct {
 * Create methods
  */
 
-func (uec *UserEmailCode) Create(r *http.Request, currentUser User) (*UserEmailCode, error) {
+func (uec *UserEmailCode) Create(r *http.Request, currentUser UserPostgres) (*UserEmailCode, error) {
 	uec.CreatedBy = currentUser.Id
 	uec.Created = time.Now()
 	_, err := db.DB.Model(uec).Returning("*").Insert()

@@ -5,6 +5,8 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"net/mail"
+	"strings"
 
 	gcontext "github.com/gorilla/context"
 	"github.com/pquerna/ffjson/ffjson"
@@ -498,7 +500,7 @@ func AddEmailToUser(r *http.Request, id string) (models.User, interface{}, error
 	userEmailCode.Create(r, currentUser)
 
 	// Send Confirmation Email to this email address
-	err = emails.AddEmailToUser(user, validEmail.Address, userEmailCode.InviteCode)
+	err = emails.AddEmailToUser(user.Data, validEmail.Address, userEmailCode.InviteCode)
 	if err != nil {
 		log.Printf("%v", err)
 		return user.Data, nil, err
@@ -544,20 +546,20 @@ func RemoveEmailFromUser(r *http.Request, id string) (models.User, interface{}, 
 	var userEmail models.UserEmail
 	err = decoder.Decode(buf, &userEmail)
 	if err != nil {
-		log.Errorf(c, "%v", err)
+		log.Printf("%v", err)
 		return models.User{}, nil, err
 	}
 
 	userEmail.Email = strings.ToLower(userEmail.Email)
 	validEmail, err := mail.ParseAddress(userEmail.Email)
 	if err != nil {
-		log.Errorf(c, "%v", err)
+		log.Printf("%v", err)
 		return user.Data, nil, err
 	}
 
 	if user.Data.Email == validEmail.Address {
 		err = errors.New("Can't remove your default email as an extra email")
-		log.Errorf(c, "%v", err)
+		log.Printf("%v", err)
 		return user.Data, nil, err
 	}
 
@@ -572,15 +574,125 @@ func RemoveEmailFromUser(r *http.Request, id string) (models.User, interface{}, 
 }
 
 func GetUserDailyEmail(r *http.Request, user models.UserPostgres) int {
-
+	return 0
 }
 
 func GetUserPlanDetails(r *http.Request, id string) (models.UserPlan, interface{}, error) {
+	user := models.UserPostgres{}
+	err := errors.New("")
 
+	currentUser, err := GetCurrentUser(r)
+	if err != nil {
+		log.Printf("%v", err)
+		return models.UserPlan{}, nil, err
+	}
+
+	switch id {
+	case "me":
+		user = currentUser
+	default:
+		userId, err := utilities.StringIdToInt(id)
+		if err != nil {
+			log.Printf("%v", err)
+			return models.UserPlan{}, nil, err
+		}
+		user, err = getUser(r, userId)
+		if err != nil {
+			log.Printf("%v", err)
+			return models.UserPlan{}, nil, err
+		}
+	}
+
+	if !permissions.AccessToObject(user.Id, currentUser.Id) && !currentUser.Data.IsAdmin {
+		err = errors.New("Forbidden")
+		log.Printf("%v", err)
+		return models.UserPlan{}, nil, err
+	}
+
+	userBilling, err := GetUserBilling(r, user)
+	if err != nil {
+		return models.UserPlan{}, nil, err
+	}
+
+	userPlan := models.UserPlan{}
+	userPlanName := billing.BillingIdToPlanName(userBilling.Data.StripePlanId)
+	userPlan.PlanName = userPlanName
+	return userPlan, nil, nil
 }
 
-func ConfirmAddEmailToUser(r *http.Request, id string) (models.UserPostgres, interface{}, error) {
+func ConfirmAddEmailToUser(r *http.Request, id string) (models.User, interface{}, error) {
+	user := models.UserPostgres{}
+	err := errors.New("")
 
+	currentUser, err := GetCurrentUser(r)
+	if err != nil {
+		log.Printf("%v", err)
+		return models.User{}, nil, err
+	}
+
+	switch id {
+	case "me":
+		user = currentUser
+	default:
+		userId, err := utilities.StringIdToInt(id)
+		if err != nil {
+			log.Printf("%v", err)
+			return models.User{}, nil, err
+		}
+		user, err = getUser(r, userId)
+		if err != nil {
+			log.Printf("%v", err)
+			return models.User{}, nil, err
+		}
+	}
+
+	if !permissions.AccessToObject(user.Id, currentUser.Id) && !currentUser.Data.IsAdmin {
+		err = errors.New("Forbidden")
+		log.Printf("%v", err)
+		return models.User{}, nil, err
+	}
+
+	if r.URL.Query().Get("code") != "" {
+		// query := datastore.NewQuery("UserEmailCode").Filter("InviteCode =", r.URL.Query().Get("code"))
+		// query = ConstructQuery(query, r)
+		// ks, err := query.KeysOnly().GetAll(c, nil)
+		// if err != nil {
+		// 	log.Errorf(c, "%v", err)
+		// 	return user, nil, err
+		// }
+
+		// var userEmailCodes []models.UserEmailCode
+		// userEmailCodes = make([]models.UserEmailCode, len(ks))
+		// err = nds.GetMulti(c, ks, userEmailCodes)
+		// if err != nil {
+		// 	log.Errorf(c, "%v", err)
+		// 	return user, nil, err
+		// }
+
+		// if len(userEmailCodes) > 0 {
+		// 	if !permissions.AccessToObject(user.Id, userEmailCodes[0].CreatedBy) {
+		// 		err = errors.New("Forbidden")
+		// 		log.Errorf(c, "%v", err)
+		// 		return user, nil, err
+		// 	}
+		// 	alreadyExists := false
+		// 	for i := 0; i < len(user.Emails); i++ {
+		// 		if user.Emails[i] == userEmailCodes[0].Email {
+		// 			alreadyExists = true
+		// 		}
+		// 	}
+
+		// 	if !alreadyExists {
+		// 		user.Emails = append(user.Emails, userEmailCodes[0].Email)
+		// 		SaveUser(c, r, &user)
+		// 	}
+		// 	return user, nil, nil
+		// }
+
+		return user.Data, nil, errors.New("No code by the code you entered")
+	}
+
+	return models.User{}, nil, errors.New("No code present")
 }
 
 func FeedbackFromUser(r *http.Request, id string) (models.UserPostgres, interface{}, error) {
