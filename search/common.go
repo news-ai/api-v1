@@ -314,53 +314,53 @@ type ElasticSortDataQuery struct {
 }
 
 func InitializeElasticSearch() {
-	tweetElastic := elastic.Elastic{}
-	tweetElastic.BaseURL = NewBaseURL
-	tweetElastic.Index = "tweets"
-	tweetElastic.Type = "tweet,md-tweet"
-	elasticTweet = &tweetElastic
+	// tweetElastic := elastic.Elastic{}
+	// tweetElastic.BaseURL = NewBaseURL
+	// tweetElastic.Index = "tweets"
+	// tweetElastic.Type = "tweet,md-tweet"
+	// elasticTweet = &tweetElastic
 
-	twitterUserElastic := elastic.Elastic{}
-	twitterUserElastic.BaseURL = NewBaseURL
-	twitterUserElastic.Index = "tweets"
-	twitterUserElastic.Type = "user"
-	elasticTwitterUser = &twitterUserElastic
+	// twitterUserElastic := elastic.Elastic{}
+	// twitterUserElastic.BaseURL = NewBaseURL
+	// twitterUserElastic.Index = "tweets"
+	// twitterUserElastic.Type = "user"
+	// elasticTwitterUser = &twitterUserElastic
 
-	contactDatabaseElastic := elastic.Elastic{}
-	contactDatabaseElastic.BaseURL = NewBaseURL
-	contactDatabaseElastic.Index = "database"
-	contactDatabaseElastic.Type = "contacts"
-	elasticContactDatabase = &contactDatabaseElastic
+	// contactDatabaseElastic := elastic.Elastic{}
+	// contactDatabaseElastic.BaseURL = NewBaseURL
+	// contactDatabaseElastic.Index = "database"
+	// contactDatabaseElastic.Type = "contacts"
+	// elasticContactDatabase = &contactDatabaseElastic
 
-	locationCountryElastic := elastic.Elastic{}
-	locationCountryElastic.BaseURL = NewBaseURL
-	locationCountryElastic.Index = "locations"
-	locationCountryElastic.Type = "country"
-	elasticLocationCountry = &locationCountryElastic
+	// locationCountryElastic := elastic.Elastic{}
+	// locationCountryElastic.BaseURL = NewBaseURL
+	// locationCountryElastic.Index = "locations"
+	// locationCountryElastic.Type = "country"
+	// elasticLocationCountry = &locationCountryElastic
 
-	locationStateElastic := elastic.Elastic{}
-	locationStateElastic.BaseURL = NewBaseURL
-	locationStateElastic.Index = "locations"
-	locationStateElastic.Type = "state"
-	elasticLocationState = &locationStateElastic
+	// locationStateElastic := elastic.Elastic{}
+	// locationStateElastic.BaseURL = NewBaseURL
+	// locationStateElastic.Index = "locations"
+	// locationStateElastic.Type = "state"
+	// elasticLocationState = &locationStateElastic
 
-	locationCityElastic := elastic.Elastic{}
-	locationCityElastic.BaseURL = NewBaseURL
-	locationCityElastic.Index = "locations"
-	locationCityElastic.Type = "city"
-	elasticLocationCity = &locationCityElastic
+	// locationCityElastic := elastic.Elastic{}
+	// locationCityElastic.BaseURL = NewBaseURL
+	// locationCityElastic.Index = "locations"
+	// locationCityElastic.Type = "city"
+	// elasticLocationCity = &locationCityElastic
 
-	mediaDatabaseElastic := elastic.Elastic{}
-	mediaDatabaseElastic.BaseURL = NewBaseURL
-	mediaDatabaseElastic.Index = "md1"
-	mediaDatabaseElastic.Type = "contacts"
-	elasticMediaDatabase = &mediaDatabaseElastic
+	// mediaDatabaseElastic := elastic.Elastic{}
+	// mediaDatabaseElastic.BaseURL = NewBaseURL
+	// mediaDatabaseElastic.Index = "md1"
+	// mediaDatabaseElastic.Type = "contacts"
+	// elasticMediaDatabase = &mediaDatabaseElastic
 
-	mediaDatabasePublicationElastic := elastic.Elastic{}
-	mediaDatabasePublicationElastic.BaseURL = NewBaseURL
-	mediaDatabasePublicationElastic.Index = "md1"
-	mediaDatabasePublicationElastic.Type = "publications"
-	elasticMediaDatabasePublication = &mediaDatabasePublicationElastic
+	// mediaDatabasePublicationElastic := elastic.Elastic{}
+	// mediaDatabasePublicationElastic.BaseURL = NewBaseURL
+	// mediaDatabasePublicationElastic.Index = "md1"
+	// mediaDatabasePublicationElastic.Type = "publications"
+	// elasticMediaDatabasePublication = &mediaDatabasePublicationElastic
 
 	headlineElastic := elastic.Elastic{}
 	headlineElastic.BaseURL = NewBaseURL
@@ -368,33 +368,33 @@ func InitializeElasticSearch() {
 	headlineElastic.Type = "headline"
 	elasticHeadline = &headlineElastic
 
-	feedElastic := elastic.Elastic{}
-	feedElastic.BaseURL = NewBaseURL
-	feedElastic.Index = "feeds"
-	feedElastic.Type = "feed,md-feed"
-	elasticFeed = &feedElastic
+	// feedElastic := elastic.Elastic{}
+	// feedElastic.BaseURL = NewBaseURL
+	// feedElastic.Index = "feeds"
+	// feedElastic.Type = "feed,md-feed"
+	// elasticFeed = &feedElastic
 
-	instagramElastic := elastic.Elastic{}
-	instagramElastic.BaseURL = NewBaseURL
-	instagramElastic.Index = "instagrams"
-	instagramElastic.Type = "instagram"
-	elasticInstagram = &instagramElastic
+	// instagramElastic := elastic.Elastic{}
+	// instagramElastic.BaseURL = NewBaseURL
+	// instagramElastic.Index = "instagrams"
+	// instagramElastic.Type = "instagram"
+	// elasticInstagram = &instagramElastic
 
-	instagramUserElastic := elastic.Elastic{}
-	instagramUserElastic.BaseURL = NewBaseURL
-	instagramUserElastic.Index = "instagrams"
-	instagramUserElastic.Type = "user"
-	elasticInstagramUser = &instagramUserElastic
+	// instagramUserElastic := elastic.Elastic{}
+	// instagramUserElastic.BaseURL = NewBaseURL
+	// instagramUserElastic.Index = "instagrams"
+	// instagramUserElastic.Type = "user"
+	// elasticInstagramUser = &instagramUserElastic
 
-	instagramTimeseriesElastic := elastic.Elastic{}
-	instagramTimeseriesElastic.BaseURL = NewBaseURL
-	instagramTimeseriesElastic.Index = "timeseries"
-	instagramTimeseriesElastic.Type = "instagram"
-	elasticInstagramTimeseries = &instagramTimeseriesElastic
+	// instagramTimeseriesElastic := elastic.Elastic{}
+	// instagramTimeseriesElastic.BaseURL = NewBaseURL
+	// instagramTimeseriesElastic.Index = "timeseries"
+	// instagramTimeseriesElastic.Type = "instagram"
+	// elasticInstagramTimeseries = &instagramTimeseriesElastic
 
-	twitterTimeseriesElastic := elastic.Elastic{}
-	twitterTimeseriesElastic.BaseURL = NewBaseURL
-	twitterTimeseriesElastic.Index = "timeseries"
-	twitterTimeseriesElastic.Type = "twitter"
-	elasticTwitterTimeseries = &twitterTimeseriesElastic
+	// twitterTimeseriesElastic := elastic.Elastic{}
+	// twitterTimeseriesElastic.BaseURL = NewBaseURL
+	// twitterTimeseriesElastic.Index = "timeseries"
+	// twitterTimeseriesElastic.Type = "twitter"
+	// elasticTwitterTimeseries = &twitterTimeseriesElastic
 }

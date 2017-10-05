@@ -18,6 +18,8 @@ import (
 	"github.com/news-ai/api-v1/routes"
 	"github.com/news-ai/api-v1/utils"
 
+	tabulaeRoutes "github.com/news-ai/tabulae-v1/routes"
+
 	"github.com/news-ai/web/api"
 	commonMiddleware "github.com/news-ai/web/middleware"
 )
@@ -163,11 +165,11 @@ func main() {
 	 * Tabulae
 	 */
 
-	// router.GET("/api/publications", tabulaeRoutes.PublicationsHandler)
-	// router.POST("/api/publications", tabulaeRoutes.PublicationsHandler)
-	// router.GET("/api/publications/:id", tabulaeRoutes.PublicationHandler)
-	// router.PATCH("/api/publications/:id", tabulaeRoutes.PublicationHandler)
-	// router.GET("/api/publications/:id/:action", tabulaeRoutes.PublicationActionHandler)
+	router.GET("/api/publications", tabulaeRoutes.PublicationsHandler)
+	router.POST("/api/publications", tabulaeRoutes.PublicationsHandler)
+	router.GET("/api/publications/:id", tabulaeRoutes.PublicationHandler)
+	router.PATCH("/api/publications/:id", tabulaeRoutes.PublicationHandler)
+	router.GET("/api/publications/:id/:action", tabulaeRoutes.PublicationActionHandler)
 
 	// router.GET("/api/contacts", tabulaeRoutes.ContactsHandler)
 	// router.POST("/api/contacts", tabulaeRoutes.ContactsHandler)
