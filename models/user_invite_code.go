@@ -3,6 +3,8 @@ package models
 import (
 	"net/http"
 	"time"
+
+	"github.com/news-ai/api-v1/db"
 )
 
 type Invite struct {
@@ -26,13 +28,13 @@ type UserInviteCode struct {
 * Create methods
  */
 
-func (uic *UserInviteCode) Create(r *http.Request, currentUser User) (*UserInviteCode, error) {
+func (uic *UserInviteCode) Create(r *http.Request, currentUser UserPostgres) (*UserInviteCode, error) {
 	// Create user
 	uic.CreatedBy = currentUser.Id
 	uic.Created = time.Now()
 	uic.IsUsed = false
 
-	_, err := uic.Save()
+	_, err := db.DB.Model(uic).Returning("*").Insert()
 	return uic, err
 }
 
@@ -43,7 +45,8 @@ func (uic *UserInviteCode) Create(r *http.Request, currentUser User) (*UserInvit
 // Function to save a new user into App Engine
 func (uic *UserInviteCode) Save() (*UserInviteCode, error) {
 	uic.Updated = time.Now()
-	return uic, nil
+	_, err := db.DB.Model(uic).Update()
+	return uic, err
 }
 
 // Function to save a new user into App Engine

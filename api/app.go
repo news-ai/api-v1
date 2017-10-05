@@ -3,9 +3,11 @@ package main
 import (
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/codegangsta/negroni"
 	"github.com/gorilla/context"
+	"github.com/gorilla/csrf"
 	"github.com/julienschmidt/httprouter"
 	"github.com/rs/cors"
 
@@ -44,6 +46,10 @@ func main() {
 	})
 	app.Use(c)
 
+	// Initialize CSRF
+	// CSRF := csrf.Protect([]byte(os.Getenv("CSRFKEY")), csrf.Secure(false)) // localhost registration
+	CSRF := csrf.Protect([]byte(os.Getenv("CSRFKEY")))
+
 	// Initialize router
 	router := httprouter.New()
 	router.NotFound = http.HandlerFunc(api.NotFound)
@@ -56,11 +62,81 @@ func main() {
 	 * Authentication Handler
 	 */
 
+	// Login
+	router.Handler("GET", "/api/auth", CSRF(auth.PasswordLoginPageHandler()))
+	router.Handler("POST", "/api/auth/userlogin", CSRF(auth.PasswordLoginHandler()))
+
+	// Forget password
+	router.Handler("GET", "/api/auth/forget", CSRF(auth.ForgetPasswordPageHandler()))
+	router.Handler("POST", "/api/auth/userforget", CSRF(auth.ForgetPasswordHandler()))
+
+	// Change password
+	router.Handler("GET", "/api/auth/changepassword", CSRF(auth.ChangePasswordPageHandler()))
+	router.Handler("POST", "/api/auth/userchange", CSRF(auth.ChangePasswordHandler()))
+
+	// Reset password
+	router.Handler("GET", "/api/auth/resetpassword", CSRF(auth.ResetPasswordPageHandler()))
+	router.Handler("POST", "/api/auth/userreset", CSRF(auth.ResetPasswordHandler()))
+
+	// Register user
+	router.Handler("GET", "/api/auth/registration", CSRF(auth.PasswordRegisterPageHandler()))
+	router.Handler("POST", "/api/auth/userregister", CSRF(auth.PasswordRegisterHandler()))
+
+	// Email confirmation
+	router.Handler("GET", "/api/auth/confirmation", CSRF(auth.EmailConfirmationHandler()))
+
+	// Invitation page
+	router.Handler("GET", "/api/auth/invitation", CSRF(auth.PasswordInvitationPageHandler()))
+
 	// Login with Google
 	router.GET("/api/auth/google", auth.GoogleLoginHandler)
 	router.GET("/api/auth/gmail", auth.GmailLoginHandler)
 	router.GET("/api/auth/remove-gmail", auth.RemoveGmailHandler)
 	router.GET("/api/auth/googlecallback", auth.GoogleCallbackHandler)
+
+	// Login with Outlook
+	router.GET("/api/auth/outlook", auth.OutlookLoginHandler)
+	router.GET("/api/auth/remove-outlook", auth.RemoveOutlookHandler)
+	router.GET("/api/auth/outlookcallback", auth.OutlookCallbackHandler)
+
+	// Logout user
+	router.GET("/api/auth/logout", auth.LogoutHandler)
+
+	/*
+	 * Billing Handler
+	 */
+
+	// Start a free trial
+	router.Handler("GET", "/api/billing/plans/trial", CSRF(auth.TrialPlanPageHandler()))
+
+	// Get all the plans
+	router.Handler("GET", "/api/billing/plans", auth.ChoosePlanPageHandler())
+
+	// Add payment method
+	router.Handler("GET", "/api/billing/payment-methods", CSRF(auth.PaymentMethodsPageHandler()))
+	router.Handler("POST", "/api/billing/add-payment-method", CSRF(auth.PaymentMethodsHandler()))
+
+	// Add plan method
+	router.Handler("POST", "/api/billing/confirmation", auth.ChoosePlanHandler())
+	router.Handler("POST", "/api/billing/switch-confirmation", auth.ChooseSwitchPlanHandler())
+	router.Handler("POST", "/api/billing/receipt", auth.ConfirmPlanHandler())
+
+	// Cancel plan method
+	router.Handler("GET", "/api/billing/cancel", CSRF(auth.CancelPlanPageHandler()))
+
+	// Optional checks
+	router.Handler("POST", "/api/billing/check-coupon", auth.CheckCouponValid())
+
+	// Main billing page for a user
+	router.Handler("GET", "/api/billing", CSRF(auth.BillingPageHandler()))
+
+	/*
+	 * API Handler
+	 */
+
+	/*
+	 * General
+	 */
 
 	router.GET("/api/users", routes.UsersHandler)
 	router.GET("/api/users/:id", routes.UserHandler)
