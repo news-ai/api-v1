@@ -16,9 +16,11 @@ import (
 	"github.com/news-ai/api-v1/db"
 	"github.com/news-ai/api-v1/middleware"
 	"github.com/news-ai/api-v1/routes"
+	apiSearch "github.com/news-ai/api-v1/search"
 	"github.com/news-ai/api-v1/utils"
 
 	tabulaeRoutes "github.com/news-ai/tabulae-v1/routes"
+	"github.com/news-ai/tabulae-v1/search"
 
 	"github.com/news-ai/web/api"
 	commonMiddleware "github.com/news-ai/web/middleware"
@@ -28,6 +30,8 @@ func main() {
 	// Setup database & URL
 	db.InitDB()
 	utils.InitURL()
+	apiSearch.InitializeElasticSearch()
+	search.InitializeElasticSearch()
 	err := auth.SetupAuthStore()
 	if err != nil {
 		log.Printf("%v", err)
@@ -208,10 +212,10 @@ func main() {
 	// router.POST("/api/email-settings/:id", tabulaeRoutes.EmailSettingHandler)
 	// router.GET("/api/email-settings/:id/:action", tabulaeRoutes.EmailSettingActionHandler)
 
-	// router.GET("/api/templates", tabulaeRoutes.TemplatesHandler)
-	// router.POST("/api/templates", tabulaeRoutes.TemplatesHandler)
-	// router.GET("/api/templates/:id", tabulaeRoutes.TemplateHandler)
-	// router.PATCH("/api/templates/:id", tabulaeRoutes.TemplateHandler)
+	router.GET("/api/templates", tabulaeRoutes.TemplatesHandler)
+	router.POST("/api/templates", tabulaeRoutes.TemplatesHandler)
+	router.GET("/api/templates/:id", tabulaeRoutes.TemplateHandler)
+	router.PATCH("/api/templates/:id", tabulaeRoutes.TemplateHandler)
 
 	router.GET("/api/feeds", tabulaeRoutes.FeedsHandler)
 	router.POST("/api/feeds", tabulaeRoutes.FeedsHandler)
