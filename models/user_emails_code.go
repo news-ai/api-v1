@@ -25,11 +25,9 @@ type UserEmailCode struct {
  */
 
 func (uec *UserEmailCode) Create(r *http.Request, currentUser User) (*UserEmailCode, error) {
-	// Create user
 	uec.CreatedBy = currentUser.Id
 	uec.Created = time.Now()
-
-	_, err := uec.Save()
+	_, err := db.DB.Model(uec).Returning("*").Insert()
 	return uec, err
 }
 
@@ -37,13 +35,13 @@ func (uec *UserEmailCode) Create(r *http.Request, currentUser User) (*UserEmailC
 * Update methods
  */
 
-// Function to save a new user into App Engine
 func (uec *UserEmailCode) Save() (*UserEmailCode, error) {
 	uec.Updated = time.Now()
-	return uec, nil
+	_, err := db.DB.Model(uec).Update()
+	return uec, err
 }
 
-// Function to save a new user into App Engine
 func (uec *UserEmailCode) Delete() (*UserEmailCode, error) {
-	return uec, nil
+	err := db.DB.Delete(uec)
+	return uec, err
 }

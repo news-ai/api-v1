@@ -13,6 +13,8 @@ import (
 	"github.com/news-ai/api-v1/db"
 	"github.com/news-ai/api-v1/models"
 
+	"github.com/news-ai/tabulae-v1/emails"
+
 	"github.com/news-ai/web/permissions"
 	"github.com/news-ai/web/utilities"
 )
@@ -417,6 +419,149 @@ func AddPlanToUser(r *http.Request, id string) (models.User, interface{}, error)
 	return postgresUser.Data, userBilling.Data, nil
 }
 
-func Update(r *http.Request, u *models.UserPostgres) (*models.UserPostgres, error) {
-	return u, nil
+func AddEmailToUser(r *http.Request, id string) (models.User, interface{}, error) {
+	user := models.UserPostgres{}
+	err := errors.New("")
+
+	switch id {
+	case "me":
+		user, err = GetCurrentUser(r)
+		if err != nil {
+			log.Printf("%v", err)
+			return models.User{}, nil, err
+		}
+	default:
+		userId, err := utilities.StringIdToInt(id)
+		if err != nil {
+			log.Printf("%v", err)
+			return models.User{}, nil, err
+		}
+		user, err = getUser(r, userId)
+		if err != nil {
+			log.Printf("%v", err)
+			return models.User{}, nil, err
+		}
+	}
+
+	currentUser, err := GetCurrentUser(r)
+	if err != nil {
+		log.Printf("%v", err)
+		return models.User{}, nil, err
+	}
+
+	if !permissions.AccessToObject(user.Id, currentUser.Id) && !currentUser.Data.IsAdmin {
+		err = errors.New("Forbidden")
+		log.Printf("%v", err)
+		return models.User{}, nil, err
+	}
+
+	// Only available when using SendGrid
+	if user.Data.Gmail || user.Data.ExternalEmail {
+		err = errors.New("Feature only works when using Sendgrid")
+		log.Printf("%v", err)
+		return models.User{}, nil, err
+	}
+
+	buf, _ := ioutil.ReadAll(r.Body)
+	decoder := ffjson.NewDecoder()
+	var userEmail models.UserEmail
+	err = decoder.Decode(buf, &userEmail)
+	if err != nil {
+		log.Printf("%v", err)
+		return models.User{}, nil, err
+	}
+
+	userEmail.Email = strings.ToLower(userEmail.Email)
+	validEmail, err := mail.ParseAddress(userEmail.Email)
+	if err != nil {
+		log.Printf("%v", err)
+		return models.User{}, nil, err
+	}
+
+	if user.Data.Email == validEmail.Address {
+		err = errors.New("Can't add your default email as an extra email")
+		log.Printf("%v", err)
+		return models.User{}, nil, err
+	}
+
+	for i := 0; i < len(user.Data.Emails); i++ {
+		if user.Data.Emails[i] == validEmail.Address {
+			err = errors.New("Email already exists for the user")
+			log.Printf("%v", err)
+			return models.User{}, nil, err
+		}
+	}
+
+	userEmailCode := models.UserEmailCode{}
+	userEmailCode.InviteCode = utilities.RandToken()
+	userEmailCode.Email = validEmail.Address
+	userEmailCode.Create(r, currentUser)
+
+	// Send Confirmation Email to this email address
+	err = emails.AddEmailToUser(user, validEmail.Address, userEmailCode.InviteCode)
+	if err != nil {
+		log.Printf("%v", err)
+		return user.Data, nil, err
+	}
+
+	return user.Data, nil, nil
+}
+
+func RemoveEmailFromUser(c context.Context, r *http.Request, id string) (models.User, interface{}, error) {
+
+}
+
+func GetUserDailyEmail(c context.Context, r *http.Request, user models.User) int {
+}
+
+func GetUserPlanDetails(c context.Context, r *http.Request, id string) (models.UserPlan, interface{}, error) {
+
+}
+
+func ConfirmAddEmailToUser(c context.Context, r *http.Request, id string) (models.User, interface{}, error) {
+
+}
+
+func FeedbackFromUser(c context.Context, r *http.Request, id string) (models.User, interface{}, error) {
+
+}
+
+/*
+* Update methods
+ */
+
+func SaveUser(c context.Context, r *http.Request, u *models.User) (*models.User, error) {
+
+}
+
+func Update(c context.Context, r *http.Request, u *models.User) (*models.User, error) {
+
+}
+
+func UpdateUser(c context.Context, r *http.Request, id string) (models.User, interface{}, error) {
+
+}
+
+/*
+* Action methods
+ */
+
+func BanUser(c context.Context, r *http.Request, id string) (models.User, interface{}, error) {
+
+}
+
+func GetAndRefreshLiveToken(c context.Context, r *http.Request, id string) (interface{}, interface{}, error) {
+
+}
+
+func ValidateUserPassword(r *http.Request, email string, password string) (models.User, bool, error) {
+
+}
+
+func SetUser(c context.Context, r *http.Request, userId int64) (models.User, error) {
+
+}
+
+func UpdateUserEmail(c context.Context, r *http.Request, id string) (models.User, interface{}, error) {
+
 }
