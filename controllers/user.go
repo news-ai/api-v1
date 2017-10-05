@@ -507,22 +507,83 @@ func AddEmailToUser(r *http.Request, id string) (models.User, interface{}, error
 	return user.Data, nil, nil
 }
 
-func RemoveEmailFromUser(c context.Context, r *http.Request, id string) (models.User, interface{}, error) {
+func RemoveEmailFromUser(r *http.Request, id string) (models.User, interface{}, error) {
+	user := models.UserPostgres{}
+	err := errors.New("")
+
+	currentUser, err := GetCurrentUser(r)
+	if err != nil {
+		log.Printf("%v", err)
+		return models.User{}, nil, err
+	}
+
+	switch id {
+	case "me":
+		user = currentUser
+	default:
+		userId, err := utilities.StringIdToInt(id)
+		if err != nil {
+			log.Printf("%v", err)
+			return models.User{}, nil, err
+		}
+		user, err = getUser(r, userId)
+		if err != nil {
+			log.Printf("%v", err)
+			return models.User{}, nil, err
+		}
+	}
+
+	if !permissions.AccessToObject(user.Id, currentUser.Id) && !currentUser.Data.IsAdmin {
+		err = errors.New("Forbidden")
+		log.Printf("%v", err)
+		return models.User{}, nil, err
+	}
+
+	buf, _ := ioutil.ReadAll(r.Body)
+	decoder := ffjson.NewDecoder()
+	var userEmail models.UserEmail
+	err = decoder.Decode(buf, &userEmail)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return models.User{}, nil, err
+	}
+
+	userEmail.Email = strings.ToLower(userEmail.Email)
+	validEmail, err := mail.ParseAddress(userEmail.Email)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return user.Data, nil, err
+	}
+
+	if user.Data.Email == validEmail.Address {
+		err = errors.New("Can't remove your default email as an extra email")
+		log.Errorf(c, "%v", err)
+		return user.Data, nil, err
+	}
+
+	for i := 0; i < len(user.Data.Emails); i++ {
+		if user.Data.Emails[i] == validEmail.Address {
+			user.Data.Emails = append(user.Data.Emails[:i], user.Data.Emails[i+1:]...)
+		}
+	}
+
+	SaveUser(r, &user)
+	return user.Data, nil, nil
+}
+
+func GetUserDailyEmail(r *http.Request, user models.UserPostgres) int {
 
 }
 
-func GetUserDailyEmail(c context.Context, r *http.Request, user models.User) int {
-}
-
-func GetUserPlanDetails(c context.Context, r *http.Request, id string) (models.UserPlan, interface{}, error) {
+func GetUserPlanDetails(r *http.Request, id string) (models.UserPlan, interface{}, error) {
 
 }
 
-func ConfirmAddEmailToUser(c context.Context, r *http.Request, id string) (models.User, interface{}, error) {
+func ConfirmAddEmailToUser(r *http.Request, id string) (models.UserPostgres, interface{}, error) {
 
 }
 
-func FeedbackFromUser(c context.Context, r *http.Request, id string) (models.User, interface{}, error) {
+func FeedbackFromUser(r *http.Request, id string) (models.UserPostgres, interface{}, error) {
 
 }
 
@@ -530,15 +591,15 @@ func FeedbackFromUser(c context.Context, r *http.Request, id string) (models.Use
 * Update methods
  */
 
-func SaveUser(c context.Context, r *http.Request, u *models.User) (*models.User, error) {
+func SaveUser(r *http.Request, u *models.UserPostgres) (*models.UserPostgres, error) {
 
 }
 
-func Update(c context.Context, r *http.Request, u *models.User) (*models.User, error) {
+func Update(r *http.Request, u *models.UserPostgres) (*models.UserPostgres, error) {
 
 }
 
-func UpdateUser(c context.Context, r *http.Request, id string) (models.User, interface{}, error) {
+func UpdateUser(r *http.Request, id string) (models.UserPostgres, interface{}, error) {
 
 }
 
@@ -546,22 +607,22 @@ func UpdateUser(c context.Context, r *http.Request, id string) (models.User, int
 * Action methods
  */
 
-func BanUser(c context.Context, r *http.Request, id string) (models.User, interface{}, error) {
+func BanUser(r *http.Request, id string) (models.UserPostgres, interface{}, error) {
 
 }
 
-func GetAndRefreshLiveToken(c context.Context, r *http.Request, id string) (interface{}, interface{}, error) {
+func GetAndRefreshLiveToken(r *http.Request, id string) (interface{}, interface{}, error) {
 
 }
 
-func ValidateUserPassword(r *http.Request, email string, password string) (models.User, bool, error) {
+func ValidateUserPassword(r *http.Request, email string, password string) (models.UserPostgres, bool, error) {
 
 }
 
-func SetUser(c context.Context, r *http.Request, userId int64) (models.User, error) {
+func SetUser(r *http.Request, userId int64) (models.UserPostgres, error) {
 
 }
 
-func UpdateUserEmail(c context.Context, r *http.Request, id string) (models.User, interface{}, error) {
+func UpdateUserEmail(r *http.Request, id string) (models.UserPostgres, interface{}, error) {
 
 }
