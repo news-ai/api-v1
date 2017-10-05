@@ -1,7 +1,6 @@
 package models
 
 import (
-	"net/http"
 	"time"
 
 	"github.com/news-ai/api-v1/db"
@@ -42,7 +41,7 @@ type BillingPostgres struct {
 * Create methods
  */
 
-func (bi *BillingPostgres) Create(r *http.Request, currentUser User) (*BillingPostgres, error) {
+func (bi *BillingPostgres) Create(currentUser UserPostgres) (*BillingPostgres, error) {
 	bi.Data.CreatedBy = currentUser.Id
 	bi.Data.Created = time.Now()
 	_, err := db.DB.Model(bi).Returning("*").Insert()

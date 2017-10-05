@@ -35,7 +35,7 @@ func AddFreeTrialToUser(r *http.Request, user models.UserPostgres, plan string) 
 		return 0, err
 	}
 
-	_, billingId, err := user.SetStripeId(c, r, user, customer.ID, plan, true, true)
+	_, billingId, err := user.SetStripeId(user, customer.ID, plan, true, true)
 	if err != nil {
 		log.Printf("%v", err)
 		return billingId, err
@@ -43,12 +43,11 @@ func AddFreeTrialToUser(r *http.Request, user models.UserPostgres, plan string) 
 	return billingId, nil
 }
 
-func AddPlanToUser(r *http.Request, user models.User, userBilling *models.Billing, plan string, duration string, coupon string, originalPlan string) error {
-	c := appengine.NewContext(r)
-	httpClient := urlfetch.Client(c)
-	sc := client.New(os.Getenv("STRIPE_SECRET_KEY"), stripe.NewBackends(httpClient))
+func AddPlanToUser(r *http.Request, user models.UserPostgres, userBilling *models.BillingPostgres, plan string, duration string, coupon string, originalPlan string) error {
+	sc := &client.API{}
+	sc.Init(os.Getenv("STRIPE_SECRET_KEY"), nil)
 
-	customer, err := sc.Customers.Get(userBilling.StripeId, nil)
+	customer, err := sc.Customers.Get(userBilling.Data.StripeId, nil)
 	if err != nil {
 		var stripeError StripeError
 		err = json.Unmarshal([]byte(err.Error()), &stripeError)
@@ -113,14 +112,14 @@ func AddPlanToUser(r *http.Request, user models.User, userBilling *models.Billin
 
 	// Return if there are any errors
 	expiresAt := time.Unix(newSub.PeriodEnd, 0)
-	userBilling.Expires = expiresAt
-	userBilling.StripePlanId = plan
-	userBilling.IsOnTrial = false
-	userBilling.Save(c)
+	userBilling.Data.Expires = expiresAt
+	userBilling.Data.StripePlanId = plan
+	userBilling.Data.IsOnTrial = false
+	userBilling.Save()
 
 	// Set the user to be an active being on the platform again
-	user.IsActive = true
-	user.Save(c)
+	user.Data.IsActive = true
+	user.Save()
 
 	currentPrice := PlanAndDurationToPrice(originalPlan, duration)
 	billAmount := "$" + fmt.Sprintf("%0.2f", currentPrice)
@@ -134,7 +133,7 @@ func AddPlanToUser(r *http.Request, user models.User, userBilling *models.Billin
 	}
 
 	// Email confirmation
-	err = emails.AddUserToTabulaePremiumList(c, user, originalPlan, emailDuration, ExpiresAt, billAmount, paidAmount)
+	err = emails.AddUserToTabulaePremiumList(user.Data, originalPlan, emailDuration, ExpiresAt, billAmount, paidAmount)
 	if err != nil {
 		log.Printf("%v", err)
 	}

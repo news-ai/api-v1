@@ -189,3 +189,34 @@ func (u *UserPostgres) ConfirmLoggedIn() (*UserPostgres, error) {
 	}
 	return u, nil
 }
+
+func (u *UserPostgres) SetStripeId(currentUser UserPostgres, stripeId string, stripePlanId string, isActive bool, isTrial bool) (*UserPostgres, int64, error) {
+	billing := Billing{}
+	billing.StripeId = stripeId
+	billing.StripePlanId = stripePlanId
+
+	if isTrial {
+		expires := time.Now().Add(time.Hour * 24 * 7 * time.Duration(1))
+		billing.HasTrial = true
+		billing.IsOnTrial = true
+		billing.Expires = expires
+	}
+
+	billingPostgres := BillingPostgres{}
+	billingPostgres.Data = billing
+
+	_, err := billingPostgres.Create(currentUser)
+	if err != nil {
+		log.Printf("%v", err)
+		return u, 0, err
+	}
+
+	u.Data.BillingId = billing.Id
+	u.Data.IsActive = isActive
+	_, err = u.Save()
+	if err != nil {
+		log.Printf("%v", err)
+		return u, 0, err
+	}
+	return u, billing.Id, nil
+}

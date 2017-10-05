@@ -3,7 +3,7 @@ package billing
 import (
 	"encoding/json"
 	"errors"
-	"net/http"
+	"log"
 	"os"
 	"strings"
 	"time"
@@ -31,12 +31,11 @@ type StripeBillingHistory struct {
 	Paid    bool    `json:"paid"`
 }
 
-func GetCustomerBalance(r *http.Request, user models.User, userBilling *models.Billing) (int64, error) {
-	c := appengine.NewContext(r)
-	httpClient := urlfetch.Client(c)
-	sc := client.New(os.Getenv("STRIPE_SECRET_KEY"), stripe.NewBackends(httpClient))
+func GetCustomerBalance(userBilling *models.BillingPostgres) (int64, error) {
+	sc := &client.API{}
+	sc.Init(os.Getenv("STRIPE_SECRET_KEY"), nil)
 
-	customer, err := sc.Customers.Get(userBilling.StripeId, nil)
+	customer, err := sc.Customers.Get(userBilling.Data.StripeId, nil)
 	if err != nil {
 		var stripeError StripeError
 		err = json.Unmarshal([]byte(err.Error()), &stripeError)
@@ -44,19 +43,18 @@ func GetCustomerBalance(r *http.Request, user models.User, userBilling *models.B
 			return 0.0, errors.New("We had an error getting your user")
 		}
 
-		log.Errorf(c, "%v", err)
+		log.Printf("%v", err)
 		return 0.0, errors.New(stripeError.Message)
 	}
 
 	return customer.Balance, nil
 }
 
-func GetCustomerBillingHistory(r *http.Request, user models.User, userBilling *models.Billing) ([]StripeBillingHistory, error) {
-	c := appengine.NewContext(r)
-	httpClient := urlfetch.Client(c)
-	sc := client.New(os.Getenv("STRIPE_SECRET_KEY"), stripe.NewBackends(httpClient))
+func GetCustomerBillingHistory(userBilling *models.BillingPostgres) ([]StripeBillingHistory, error) {
+	sc := &client.API{}
+	sc.Init(os.Getenv("STRIPE_SECRET_KEY"), nil)
 
-	customer, err := sc.Customers.Get(userBilling.StripeId, nil)
+	customer, err := sc.Customers.Get(userBilling.Data.StripeId, nil)
 	if err != nil {
 		var stripeError StripeError
 		err = json.Unmarshal([]byte(err.Error()), &stripeError)
@@ -64,7 +62,7 @@ func GetCustomerBillingHistory(r *http.Request, user models.User, userBilling *m
 			return []StripeBillingHistory{}, errors.New("We had an error getting your user")
 		}
 
-		log.Errorf(c, "%v", err)
+		log.Printf("%v", err)
 		return []StripeBillingHistory{}, errors.New(stripeError.Message)
 	}
 
@@ -88,10 +86,9 @@ func GetCustomerBillingHistory(r *http.Request, user models.User, userBilling *m
 	return billingHistory, nil
 }
 
-func GetCoupon(r *http.Request, coupon string) (uint64, error) {
-	c := appengine.NewContext(r)
-	httpClient := urlfetch.Client(c)
-	sc := client.New(os.Getenv("STRIPE_SECRET_KEY"), stripe.NewBackends(httpClient))
+func GetCoupon(coupon string) (uint64, error) {
+	sc := &client.API{}
+	sc.Init(os.Getenv("STRIPE_SECRET_KEY"), nil)
 	coupon = strings.ToUpper(coupon)
 
 	stripeCoupon, err := sc.Coupons.Get(coupon, nil)
@@ -102,7 +99,7 @@ func GetCoupon(r *http.Request, coupon string) (uint64, error) {
 			return uint64(0), errors.New("Your coupon was invalid")
 		}
 
-		log.Errorf(c, "%v", err)
+		log.Printf("%v", err)
 		return uint64(0), errors.New(stripeError.Message)
 	}
 
@@ -113,12 +110,11 @@ func GetCoupon(r *http.Request, coupon string) (uint64, error) {
 	return uint64(0), errors.New("Your coupon was invalid or has expired")
 }
 
-func GetUserCards(r *http.Request, user models.User, userBilling *models.Billing) ([]Card, error) {
-	c := appengine.NewContext(r)
-	httpClient := urlfetch.Client(c)
-	sc := client.New(os.Getenv("STRIPE_SECRET_KEY"), stripe.NewBackends(httpClient))
+func GetUserCards(userBilling *models.BillingPostgres) ([]Card, error) {
+	sc := &client.API{}
+	sc.Init(os.Getenv("STRIPE_SECRET_KEY"), nil)
 
-	customer, err := sc.Customers.Get(userBilling.StripeId, nil)
+	customer, err := sc.Customers.Get(userBilling.Data.StripeId, nil)
 	if err != nil {
 		var stripeError StripeError
 		err = json.Unmarshal([]byte(err.Error()), &stripeError)
@@ -126,7 +122,7 @@ func GetUserCards(r *http.Request, user models.User, userBilling *models.Billing
 			return []Card{}, errors.New("We had an error getting your user")
 		}
 
-		log.Errorf(c, "%v", err)
+		log.Printf("%v", err)
 		return []Card{}, errors.New(stripeError.Message)
 	}
 
@@ -142,16 +138,15 @@ func GetUserCards(r *http.Request, user models.User, userBilling *models.Billing
 	return cards, nil
 }
 
-func AddPaymentsToCustomer(r *http.Request, user models.User, userBilling *models.Billing, stripeToken string) error {
-	c := appengine.NewContext(r)
-	httpClient := urlfetch.Client(c)
-	sc := client.New(os.Getenv("STRIPE_SECRET_KEY"), stripe.NewBackends(httpClient))
+func AddPaymentsToCustomer(userBilling *models.BillingPostgres, stripeToken string) error {
+	sc := &client.API{}
+	sc.Init(os.Getenv("STRIPE_SECRET_KEY"), nil)
 
 	params := &stripe.CustomerParams{}
 	params.SetSource(stripeToken)
 
 	_, err := sc.Customers.Update(
-		userBilling.StripeId,
+		userBilling.Data.StripeId,
 		params,
 	)
 
@@ -162,21 +157,21 @@ func AddPaymentsToCustomer(r *http.Request, user models.User, userBilling *model
 			return errors.New("We had an error getting your user")
 		}
 
-		log.Errorf(c, "%v", err)
+		log.Printf("%v", err)
 		return errors.New(stripeError.Message)
 	}
 
-	newCustomer, err := sc.Customers.Get(userBilling.StripeId, nil)
+	newCustomer, err := sc.Customers.Get(userBilling.Data.StripeId, nil)
 	if err != nil {
-		log.Errorf(c, "%v", err)
+		log.Printf("%v", err)
 		return err
 	}
 
-	userBilling.CardsOnFile = []string{}
+	userBilling.Data.CardsOnFile = []string{}
 	for i := 0; i < len(newCustomer.Sources.Values); i++ {
-		userBilling.CardsOnFile = append(userBilling.CardsOnFile, newCustomer.Sources.Values[i].ID)
+		userBilling.Data.CardsOnFile = append(userBilling.Data.CardsOnFile, newCustomer.Sources.Values[i].ID)
 	}
-	userBilling.Save(c)
+	userBilling.Save()
 
 	return nil
 }
