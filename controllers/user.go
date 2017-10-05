@@ -269,7 +269,7 @@ func GetUserByEmailForValidation(email string) (models.UserPostgres, error) {
 	return postgresUser, nil
 }
 
-func GetUserByApiKey(apiKey string) (models.UserPostgres, error) {
+func GetUserFromApiKey(apiKey string) (models.UserPostgres, error) {
 	postgresUser, err := filterUser("apikey", apiKey)
 	if err != nil {
 		log.Printf("%v", err)
