@@ -653,50 +653,94 @@ func ConfirmAddEmailToUser(r *http.Request, id string) (models.User, interface{}
 	}
 
 	if r.URL.Query().Get("code") != "" {
-		// query := datastore.NewQuery("UserEmailCode").Filter("InviteCode =", r.URL.Query().Get("code"))
-		// query = ConstructQuery(query, r)
-		// ks, err := query.KeysOnly().GetAll(c, nil)
-		// if err != nil {
-		// 	log.Errorf(c, "%v", err)
-		// 	return user, nil, err
-		// }
+		userEmailCode := models.UserEmailCode{}
+		err := db.DB.Model(&userEmailCode).Where("invite_code = ?", r.URL.Query().Get("code")).Select()
+		if err != nil {
+			log.Printf("%v", err)
+			return models.User{}, nil, err
+		}
 
-		// var userEmailCodes []models.UserEmailCode
-		// userEmailCodes = make([]models.UserEmailCode, len(ks))
-		// err = nds.GetMulti(c, ks, userEmailCodes)
-		// if err != nil {
-		// 	log.Errorf(c, "%v", err)
-		// 	return user, nil, err
-		// }
+		if userEmailCode.InviteCode != "" {
+			if !permissions.AccessToObject(user.Id, userEmailCode.CreatedBy) {
+				err = errors.New("Forbidden")
+				log.Errorf(c, "%v", err)
+				return models.User{}, nil, err
+			}
 
-		// if len(userEmailCodes) > 0 {
-		// 	if !permissions.AccessToObject(user.Id, userEmailCodes[0].CreatedBy) {
-		// 		err = errors.New("Forbidden")
-		// 		log.Errorf(c, "%v", err)
-		// 		return user, nil, err
-		// 	}
-		// 	alreadyExists := false
-		// 	for i := 0; i < len(user.Emails); i++ {
-		// 		if user.Emails[i] == userEmailCodes[0].Email {
-		// 			alreadyExists = true
-		// 		}
-		// 	}
+			alreadyExists := false
+			for i := 0; i < len(user.Data.Emails); i++ {
+				if user.Data.Emails[i] == userEmailCode.Email {
+					alreadyExists = true
+				}
+			}
 
-		// 	if !alreadyExists {
-		// 		user.Emails = append(user.Emails, userEmailCodes[0].Email)
-		// 		SaveUser(c, r, &user)
-		// 	}
-		// 	return user, nil, nil
-		// }
+			if !alreadyExists {
+				user.Data.Emails = append(user.Data.Emails, userEmailCode.Email)
+				SaveUser(c, r, &user)
+			}
 
-		return user.Data, nil, errors.New("No code by the code you entered")
+			return user.Data, nil, nil
+		}
+
+		return models.User{}, nil, errors.New("No code by the code you entered")
 	}
 
 	return models.User{}, nil, errors.New("No code present")
 }
 
 func FeedbackFromUser(r *http.Request, id string) (models.UserPostgres, interface{}, error) {
+	user := models.UserPostgres{}
+	err := errors.New("")
 
+	currentUser, err := GetCurrentUser(r)
+	if err != nil {
+		log.Printf("%v", err)
+		return models.User{}, nil, err
+	}
+
+	switch id {
+	case "me":
+		user = currentUser
+	default:
+		userId, err := utilities.StringIdToInt(id)
+		if err != nil {
+			log.Printf("%v", err)
+			return models.User{}, nil, err
+		}
+		user, err = getUser(r, userId)
+		if err != nil {
+			log.Printf("%v", err)
+			return models.User{}, nil, err
+		}
+	}
+
+	if !permissions.AccessToObject(user.Id, currentUser.Id) && !currentUser.Data.IsAdmin {
+		err = errors.New("Forbidden")
+		log.Printf("%v", err)
+		return models.User{}, nil, err
+	}
+
+	buf, _ := ioutil.ReadAll(r.Body)
+	decoder := ffjson.NewDecoder()
+	var userFeedback models.UserFeedback
+	err = decoder.Decode(buf, &userFeedback)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return models.User{}, nil, err
+	}
+
+	// Get user's billing profile and add reasons there
+	userBilling, err := GetUserBilling(c, r, currentUser)
+	userBilling.Data.ReasonNotPurchase = userFeedback.ReasonNotPurchase
+	userBilling.Data.FeedbackAfterTrial = userFeedback.FeedbackAfterTrial
+	userBilling.Save()
+
+	// Set the trial feedback to true - since they gave us feedback now
+	user.Data.TrialFeedback = true
+	user.Save()
+
+	// sync.ResourceSync(r, user.Id, "User", "create")
+	return user.Data, nil, nil
 }
 
 /*
