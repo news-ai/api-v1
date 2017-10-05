@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/mail"
 	"strings"
+	"time"
 
 	gcontext "github.com/gorilla/context"
 	"github.com/pquerna/ffjson/ffjson"
@@ -663,7 +664,7 @@ func ConfirmAddEmailToUser(r *http.Request, id string) (models.User, interface{}
 		if userEmailCode.InviteCode != "" {
 			if !permissions.AccessToObject(user.Id, userEmailCode.CreatedBy) {
 				err = errors.New("Forbidden")
-				log.Errorf(c, "%v", err)
+				log.Printf("%v", err)
 				return models.User{}, nil, err
 			}
 
@@ -676,7 +677,7 @@ func ConfirmAddEmailToUser(r *http.Request, id string) (models.User, interface{}
 
 			if !alreadyExists {
 				user.Data.Emails = append(user.Data.Emails, userEmailCode.Email)
-				SaveUser(c, r, &user)
+				SaveUser(r, &user)
 			}
 
 			return user.Data, nil, nil
@@ -688,7 +689,7 @@ func ConfirmAddEmailToUser(r *http.Request, id string) (models.User, interface{}
 	return models.User{}, nil, errors.New("No code present")
 }
 
-func FeedbackFromUser(r *http.Request, id string) (models.UserPostgres, interface{}, error) {
+func FeedbackFromUser(r *http.Request, id string) (models.User, interface{}, error) {
 	user := models.UserPostgres{}
 	err := errors.New("")
 
@@ -725,12 +726,12 @@ func FeedbackFromUser(r *http.Request, id string) (models.UserPostgres, interfac
 	var userFeedback models.UserFeedback
 	err = decoder.Decode(buf, &userFeedback)
 	if err != nil {
-		log.Errorf(c, "%v", err)
+		log.Printf("%v", err)
 		return models.User{}, nil, err
 	}
 
 	// Get user's billing profile and add reasons there
-	userBilling, err := GetUserBilling(c, r, currentUser)
+	userBilling, err := GetUserBilling(r, currentUser)
 	userBilling.Data.ReasonNotPurchase = userFeedback.ReasonNotPurchase
 	userBilling.Data.FeedbackAfterTrial = userFeedback.FeedbackAfterTrial
 	userBilling.Save()
@@ -748,14 +749,135 @@ func FeedbackFromUser(r *http.Request, id string) (models.UserPostgres, interfac
  */
 
 func SaveUser(r *http.Request, u *models.UserPostgres) (*models.UserPostgres, error) {
-
+	u.Save()
+	// sync.ResourceSync(r, u.Id, "User", "create")
+	return u, nil
 }
 
 func Update(r *http.Request, u *models.UserPostgres) (*models.UserPostgres, error) {
+	if len(u.Data.Employers) == 0 {
+		// CreateAgencyFromUser( r, u)
+	}
 
+	billing, err := GetUserBilling(r, *u)
+	if err != nil {
+		return u, err
+	}
+
+	if billing.Data.Expires.Before(time.Now()) {
+		if billing.Data.IsOnTrial {
+			u.Data.IsActive = false
+			u.Save()
+
+			billing.Data.IsOnTrial = false
+			billing.Save()
+		} else {
+			if billing.Data.IsCancel {
+				u.Data.IsActive = false
+				u.Save()
+			} else {
+				if billing.Data.StripePlanId != "free" {
+					// If they haven't canceled then we can add a month until they do.
+					// More sophisticated to add the amount depending on what
+					// plan they were on.
+					addAMonth := billing.Data.Expires.AddDate(0, 1, 0)
+					billing.Data.Expires = addAMonth
+					billing.Save()
+
+					// Keep the user active
+					u.Data.IsActive = true
+					u.Save()
+				}
+			}
+		}
+	}
+
+	return u, nil
 }
 
-func UpdateUser(r *http.Request, id string) (models.UserPostgres, interface{}, error) {
+func UpdateUser(r *http.Request, id string) (models.User, interface{}, error) {
+	user := models.UserPostgres{}
+	err := errors.New("")
+
+	currentUser, err := GetCurrentUser(r)
+	if err != nil {
+		log.Printf("%v", err)
+		return models.User{}, nil, err
+	}
+
+	switch id {
+	case "me":
+		user = currentUser
+	default:
+		userId, err := utilities.StringIdToInt(id)
+		if err != nil {
+			log.Printf("%v", err)
+			return models.User{}, nil, err
+		}
+		user, err = getUser(r, userId)
+		if err != nil {
+			log.Printf("%v", err)
+			return models.User{}, nil, err
+		}
+	}
+
+	if !permissions.AccessToObject(user.Id, currentUser.Id) && !currentUser.Data.IsAdmin {
+		err = errors.New("Forbidden")
+		log.Printf("%v", err)
+		return models.User{}, nil, err
+	}
+
+	buf, _ := ioutil.ReadAll(r.Body)
+	decoder := ffjson.NewDecoder()
+	var updatedUser models.User
+	err = decoder.Decode(buf, &updatedUser)
+	if err != nil {
+		log.Printf("%v", err)
+		return models.User{}, nil, err
+	}
+
+	utilities.UpdateIfNotBlank(&user.Data.FirstName, updatedUser.FirstName)
+	utilities.UpdateIfNotBlank(&user.Data.LastName, updatedUser.LastName)
+	utilities.UpdateIfNotBlank(&user.Data.EmailSignature, updatedUser.EmailSignature)
+
+	// If new user wants to get daily emails
+	if updatedUser.GetDailyEmails == true {
+		user.Data.GetDailyEmails = true
+	}
+
+	// If this person doesn't want to get daily emails anymore
+	if user.Data.GetDailyEmails == true && updatedUser.GetDailyEmails == false {
+		user.Data.GetDailyEmails = false
+	}
+
+	if user.Data.SMTPValid {
+		// If new user wants to get daily emails
+		if updatedUser.ExternalEmail == true {
+			user.Data.ExternalEmail = true
+		}
+
+		// If this person doesn't want to get daily emails anymore
+		if user.Data.ExternalEmail == true && updatedUser.ExternalEmail == false {
+			user.Data.ExternalEmail = false
+		}
+	}
+
+	if len(updatedUser.Employers) > 0 {
+		user.Data.Employers = updatedUser.Employers
+	}
+
+	if len(updatedUser.EmailSignatures) > 0 {
+		user.Data.EmailSignatures = updatedUser.EmailSignatures
+	}
+
+	// Special case when you want to remove all the email signatures
+	if len(user.Data.EmailSignatures) > 0 && len(updatedUser.EmailSignatures) == 0 {
+		user.Data.EmailSignatures = updatedUser.EmailSignatures
+	}
+
+	user.Save()
+	// sync.ResourceSync(r, user.Id, "User", "create")
+	return user.Data, nil, nil
 
 }
 
@@ -763,22 +885,153 @@ func UpdateUser(r *http.Request, id string) (models.UserPostgres, interface{}, e
 * Action methods
  */
 
-func BanUser(r *http.Request, id string) (models.UserPostgres, interface{}, error) {
+func BanUser(r *http.Request, id string) (models.User, interface{}, error) {
+	user := models.UserPostgres{}
+	err := errors.New("")
 
+	currentUser, err := GetCurrentUser(r)
+	if err != nil {
+		log.Printf("%v", err)
+		return models.User{}, nil, err
+	}
+
+	switch id {
+	case "me":
+		user = currentUser
+	default:
+		userId, err := utilities.StringIdToInt(id)
+		if err != nil {
+			log.Printf("%v", err)
+			return models.User{}, nil, err
+		}
+		user, err = getUser(r, userId)
+		if err != nil {
+			log.Printf("%v", err)
+			return models.User{}, nil, err
+		}
+	}
+
+	if !permissions.AccessToObject(user.Id, currentUser.Id) && !currentUser.Data.IsAdmin {
+		err = errors.New("Forbidden")
+		log.Printf("%v", err)
+		return models.User{}, nil, err
+	}
+
+	user.Data.IsActive = false
+	user.Data.IsBanned = true
+	SaveUser(r, &user)
+	return user.Data, nil, nil
 }
 
-func GetAndRefreshLiveToken(r *http.Request, id string) (interface{}, interface{}, error) {
+func GetAndRefreshLiveToken(r *http.Request, id string) (models.UserLiveToken, interface{}, error) {
+	user := models.UserPostgres{}
+	err := errors.New("")
 
+	currentUser, err := GetCurrentUser(r)
+	if err != nil {
+		log.Printf("%v", err)
+		return models.UserLiveToken{}, nil, err
+	}
+
+	switch id {
+	case "me":
+		user = currentUser
+	default:
+		userId, err := utilities.StringIdToInt(id)
+		if err != nil {
+			log.Printf("%v", err)
+			return models.UserLiveToken{}, nil, err
+		}
+		user, err = getUser(r, userId)
+		if err != nil {
+			log.Printf("%v", err)
+			return models.UserLiveToken{}, nil, err
+		}
+	}
+
+	if !permissions.AccessToObject(user.Id, currentUser.Id) && !currentUser.Data.IsAdmin {
+		err = errors.New("Forbidden")
+		log.Printf("%v", err)
+		return models.UserLiveToken{}, nil, err
+	}
+
+	token := models.UserLiveToken{}
+	token.Token = user.Data.LiveAccessToken
+	token.Expires = user.Data.LiveAccessTokenExpire
+	return token, nil, nil
 }
 
 func ValidateUserPassword(r *http.Request, email string, password string) (models.UserPostgres, bool, error) {
+	user, err := GetUserByEmailForValidation(email)
+	if err == nil {
+		err = utilities.ValidatePassword(user.Data.Password, password)
+		if err != nil {
+			log.Printf("%v", err)
+			return user, false, nil
+		}
+		return user, true, nil
+	}
+	return models.UserPostgres{}, false, errors.New("User does not exist")
 
 }
 
 func SetUser(r *http.Request, userId int64) (models.UserPostgres, error) {
+	user, err := getUserUnauthorized(r, userId)
+	if err != nil {
+		log.Printf("%v", err)
+	}
+	gcontext.Set(r, "user", user)
+	return user, nil
 
 }
 
-func UpdateUserEmail(r *http.Request, id string) (models.UserPostgres, interface{}, error) {
+func UpdateUserEmail(r *http.Request, id string) (models.User, interface{}, error) {
+	user := models.UserPostgres{}
+	err := errors.New("")
 
+	currentUser, err := GetCurrentUser(r)
+	if err != nil {
+		log.Printf("%v", err)
+		return models.User{}, nil, err
+	}
+
+	switch id {
+	case "me":
+		user = currentUser
+	default:
+		userId, err := utilities.StringIdToInt(id)
+		if err != nil {
+			log.Printf("%v", err)
+			return models.User{}, nil, err
+		}
+		user, err = getUser(r, userId)
+		if err != nil {
+			log.Printf("%v", err)
+			return models.User{}, nil, err
+		}
+	}
+
+	if !permissions.AccessToObject(user.Id, currentUser.Id) && !currentUser.Data.IsAdmin {
+		err = errors.New("Forbidden")
+		log.Printf("%v", err)
+		return models.User{}, nil, err
+	}
+
+	buf, _ := ioutil.ReadAll(r.Body)
+	decoder := ffjson.NewDecoder()
+	var updatedUser models.User
+	err = decoder.Decode(buf, &updatedUser)
+	if err != nil {
+		log.Errorf(c, "%v", err)
+		return models.User{}, nil, err
+	}
+
+	// If new user wants to get daily emails
+	if updatedUser.Email != "" {
+		user.Data.Email = updatedUser.Email
+	}
+
+	user.Save()
+	// sync.ResourceSync(r, user.Id, "User", "create")
+	return user.Data, nil, nil
 }
