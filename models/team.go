@@ -3,6 +3,8 @@ package models
 import (
 	"net/http"
 	"time"
+
+	"github.com/news-ai/api-v1/db"
 )
 
 type Team struct {
@@ -27,11 +29,10 @@ type Team struct {
  */
 
 // Function to create a new team into App Engine
-func (t *Team) Create(r *http.Request, currentUser User) (*Team, error) {
+func (t *Team) Create(r *http.Request, currentUser UserPostgres) (*Team, error) {
 	t.CreatedBy = currentUser.Id
 	t.Created = time.Now()
-
-	_, err := t.Save()
+	_, err := db.DB.Model(t).Returning("*").Insert()
 	return t, err
 }
 
@@ -43,5 +44,6 @@ func (t *Team) Create(r *http.Request, currentUser User) (*Team, error) {
 func (t *Team) Save() (*Team, error) {
 	// Update the Updated time
 	t.Updated = time.Now()
-	return t, nil
+	_, err := db.DB.Model(t).Update()
+	return t, err
 }

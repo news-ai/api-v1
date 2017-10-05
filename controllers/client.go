@@ -35,6 +35,7 @@ func getClient(id int64) (models.Client, error) {
 		client.Type = "clients"
 		return client, nil
 	}
+
 	return models.Client{}, errors.New("No client by this id")
 }
 

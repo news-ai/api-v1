@@ -10,6 +10,7 @@ import (
 	"github.com/gorilla/csrf"
 	"github.com/julienschmidt/httprouter"
 	"github.com/rs/cors"
+	"github.com/unrolled/secure"
 
 	"github.com/news-ai/api-v1/auth"
 	"github.com/news-ai/api-v1/db"
@@ -150,8 +151,85 @@ func main() {
 	router.GET("/api/clients", routes.ClientsHandler)
 	router.GET("/api/clients/:id", routes.ClientHandler)
 
+	router.GET("/api/teams", routes.TeamsHandler)
+	router.POST("/api/teams", routes.TeamsHandler)
+	router.GET("/api/teams/:id", routes.TeamHandler)
+	router.GET("/api/teams/:id/:action", routes.TeamActionHandler)
+
+	router.GET("/api/invites", routes.InvitesHandler)
+	router.POST("/api/invites", routes.InvitesHandler)
+
+	/*
+	 * Tabulae
+	 */
+
+	// router.GET("/api/publications", tabulaeRoutes.PublicationsHandler)
+	// router.POST("/api/publications", tabulaeRoutes.PublicationsHandler)
+	// router.GET("/api/publications/:id", tabulaeRoutes.PublicationHandler)
+	// router.PATCH("/api/publications/:id", tabulaeRoutes.PublicationHandler)
+	// router.GET("/api/publications/:id/:action", tabulaeRoutes.PublicationActionHandler)
+
+	// router.GET("/api/contacts", tabulaeRoutes.ContactsHandler)
+	// router.POST("/api/contacts", tabulaeRoutes.ContactsHandler)
+	// router.PATCH("/api/contacts", tabulaeRoutes.ContactsHandler)
+	// router.GET("/api/contacts/:id", tabulaeRoutes.ContactHandler)
+	// router.PATCH("/api/contacts/:id", tabulaeRoutes.ContactHandler)
+	// router.POST("/api/contacts/:id", tabulaeRoutes.ContactHandler)
+	// router.DELETE("/api/contacts/:id", tabulaeRoutes.ContactHandler)
+	// router.GET("/api/contacts/:id/:action", tabulaeRoutes.ContactActionHandler)
+
+	// // router.GET("/api/contacts_v2", tabulaeRoutes.ContactsV2Handler)
+	// // router.POST("/api/contacts_v2", tabulaeRoutes.ContactsV2Handler)
+	// // router.GET("/api/contacts_v2/:id", tabulaeRoutes.ContactV2Handler)
+
+	// router.GET("/api/files", tabulaeRoutes.FilesHandler)
+	// router.GET("/api/files/:id", tabulaeRoutes.FileHandler)
+	// router.GET("/api/files/:id/:action", tabulaeRoutes.FileActionHandler)
+	// router.POST("/api/files/:id/:action", tabulaeRoutes.FileActionHandler)
+
+	// router.GET("/api/lists", tabulaeRoutes.MediaListsHandler)
+	// router.POST("/api/lists", tabulaeRoutes.MediaListsHandler)
+	// router.GET("/api/lists/:id", tabulaeRoutes.MediaListHandler)
+	// router.PATCH("/api/lists/:id", tabulaeRoutes.MediaListHandler)
+	// router.DELETE("/api/lists/:id", tabulaeRoutes.MediaListHandler)
+	// router.GET("/api/lists/:id/:action", tabulaeRoutes.MediaListActionHandler)
+	// router.POST("/api/lists/:id/:action", tabulaeRoutes.MediaListActionHandler)
+
+	// router.GET("/api/emails", tabulaeRoutes.EmailsHandler)
+	// router.POST("/api/emails", tabulaeRoutes.EmailsHandler)
+	// router.PATCH("/api/emails", tabulaeRoutes.EmailsHandler)
+	// router.GET("/api/emails/:id", tabulaeRoutes.EmailHandler)
+	// router.PATCH("/api/emails/:id", tabulaeRoutes.EmailHandler)
+	// router.POST("/api/emails/:id", tabulaeRoutes.EmailHandler)
+	// router.GET("/api/emails/:id/:action", tabulaeRoutes.EmailActionHandler)
+	// router.POST("/api/emails/:id/:action", tabulaeRoutes.EmailActionHandler)
+
+	// router.GET("/api/email-settings", tabulaeRoutes.EmailSettingsHandler)
+	// router.POST("/api/email-settings", tabulaeRoutes.EmailSettingsHandler)
+	// router.GET("/api/email-settings/:id", tabulaeRoutes.EmailSettingHandler)
+	// router.POST("/api/email-settings/:id", tabulaeRoutes.EmailSettingHandler)
+	// router.GET("/api/email-settings/:id/:action", tabulaeRoutes.EmailSettingActionHandler)
+
+	// router.GET("/api/templates", tabulaeRoutes.TemplatesHandler)
+	// router.POST("/api/templates", tabulaeRoutes.TemplatesHandler)
+	// router.GET("/api/templates/:id", tabulaeRoutes.TemplateHandler)
+	// router.PATCH("/api/templates/:id", tabulaeRoutes.TemplateHandler)
+
+	// router.GET("/api/feeds", tabulaeRoutes.FeedsHandler)
+	// router.POST("/api/feeds", tabulaeRoutes.FeedsHandler)
+	// router.GET("/api/feeds/:id", tabulaeRoutes.FeedHandler)
+	// router.DELETE("/api/feeds/:id", tabulaeRoutes.FeedHandler)
+
+	// Security fixes
+	secureMiddleware := secure.New(secure.Options{
+		FrameDeny:        true,
+		BrowserXssFilter: true,
+	})
+
 	app.Use(negroni.HandlerFunc(middleware.UpdateOrCreateUser))
 	app.Use(negroni.HandlerFunc(commonMiddleware.AttachParameters))
+	app.Use(negroni.HandlerFunc(secureMiddleware.HandlerFuncWithNext))
+
 	app.UseHandler(router)
 
 	// Register the app router
