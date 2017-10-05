@@ -3,6 +3,8 @@ package models
 import (
 	"net/http"
 	"time"
+
+	"github.com/news-ai/api-v1/db"
 )
 
 type Agency struct {

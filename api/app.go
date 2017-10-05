@@ -68,6 +68,9 @@ func main() {
 	router.GET("/api/users/:id/:action", routes.UserActionHandler)
 	router.POST("/api/users/:id/:action", routes.UserActionHandler)
 
+	router.GET("/api/agencies", routes.AgenciesHandler)
+	router.GET("/api/agencies/:id", routes.AgencyHandler)
+
 	app.Use(negroni.HandlerFunc(middleware.UpdateOrCreateUser))
 	app.Use(negroni.HandlerFunc(commonMiddleware.AttachParameters))
 	app.UseHandler(router)
