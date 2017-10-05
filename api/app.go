@@ -180,10 +180,6 @@ func main() {
 	// router.DELETE("/api/contacts/:id", tabulaeRoutes.ContactHandler)
 	// router.GET("/api/contacts/:id/:action", tabulaeRoutes.ContactActionHandler)
 
-	// // router.GET("/api/contacts_v2", tabulaeRoutes.ContactsV2Handler)
-	// // router.POST("/api/contacts_v2", tabulaeRoutes.ContactsV2Handler)
-	// // router.GET("/api/contacts_v2/:id", tabulaeRoutes.ContactV2Handler)
-
 	// router.GET("/api/files", tabulaeRoutes.FilesHandler)
 	// router.GET("/api/files/:id", tabulaeRoutes.FileHandler)
 	// router.GET("/api/files/:id/:action", tabulaeRoutes.FileActionHandler)
@@ -217,10 +213,10 @@ func main() {
 	// router.GET("/api/templates/:id", tabulaeRoutes.TemplateHandler)
 	// router.PATCH("/api/templates/:id", tabulaeRoutes.TemplateHandler)
 
-	// router.GET("/api/feeds", tabulaeRoutes.FeedsHandler)
-	// router.POST("/api/feeds", tabulaeRoutes.FeedsHandler)
-	// router.GET("/api/feeds/:id", tabulaeRoutes.FeedHandler)
-	// router.DELETE("/api/feeds/:id", tabulaeRoutes.FeedHandler)
+	router.GET("/api/feeds", tabulaeRoutes.FeedsHandler)
+	router.POST("/api/feeds", tabulaeRoutes.FeedsHandler)
+	router.GET("/api/feeds/:id", tabulaeRoutes.FeedHandler)
+	router.DELETE("/api/feeds/:id", tabulaeRoutes.FeedHandler)
 
 	// Security fixes
 	secureMiddleware := secure.New(secure.Options{
