@@ -14,6 +14,10 @@ import (
 	nError "github.com/news-ai/web/errors"
 )
 
+func handleUserActions(r *http.Request, id string, action string) (interface{}, error) {
+	return nil, errors.New("method not implemented")
+}
+
 func handleUser(r *http.Request, id string) (interface{}, error) {
 	switch r.Method {
 	case "GET":
@@ -51,6 +55,28 @@ func UserHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	w.Header().Set("Content-Type", "application/json")
 	id := ps.ByName("id")
 	val, err := handleUser(r, id)
+
+	if err == nil {
+		err = ffjson.NewEncoder(w).Encode(val)
+	}
+
+	if err != nil {
+		nError.ReturnError(w, http.StatusInternalServerError, "User handling error", err.Error())
+	}
+	return
+}
+
+func UserActionHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	w.Header().Set("Content-Type", "application/json")
+	id := ps.ByName("id")
+	action := ps.ByName("action")
+
+	val, err := handleUserActions(r, id, action)
+
+	if action == "confirm-email" {
+		http.Redirect(w, r, "https://tabulae.newsai.co/settings", 302)
+		return
+	}
 
 	if err == nil {
 		err = ffjson.NewEncoder(w).Encode(val)

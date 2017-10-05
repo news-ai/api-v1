@@ -57,6 +57,7 @@ func getUser(r *http.Request, id int64) (models.UserPostgres, error) {
 		postgresUser.Data.Id = postgresUser.Id
 		return postgresUser, nil
 	}
+
 	return models.UserPostgres{}, errors.New("No user by this id")
 }
 
@@ -311,6 +312,7 @@ func GetCurrentUser(r *http.Request) (models.UserPostgres, error) {
 	if !ok {
 		return models.UserPostgres{}, errors.New("No user logged in")
 	}
+
 	user := gcontext.Get(r, "user").(models.UserPostgres)
 	return user, nil
 }
@@ -969,8 +971,10 @@ func ValidateUserPassword(r *http.Request, email string, password string) (model
 			log.Printf("%v", err)
 			return user, false, nil
 		}
+
 		return user, true, nil
 	}
+
 	return models.UserPostgres{}, false, errors.New("User does not exist")
 
 }
@@ -980,6 +984,7 @@ func SetUser(r *http.Request, userId int64) (models.UserPostgres, error) {
 	if err != nil {
 		log.Printf("%v", err)
 	}
+
 	gcontext.Set(r, "user", user)
 	return user, nil
 
@@ -1022,7 +1027,7 @@ func UpdateUserEmail(r *http.Request, id string) (models.User, interface{}, erro
 	var updatedUser models.User
 	err = decoder.Decode(buf, &updatedUser)
 	if err != nil {
-		log.Errorf(c, "%v", err)
+		log.Printf("%v", err)
 		return models.User{}, nil, err
 	}
 

@@ -20,10 +20,10 @@ type Agency struct {
 * Create methods
  */
 
-func (a *Agency) Create(r *http.Request, currentUser User) (*Agency, error) {
+func (a *Agency) Create(r *http.Request, currentUser UserPostgres) (*Agency, error) {
 	a.CreatedBy = currentUser.Id
 	a.Created = time.Now()
-	_, err := a.Save()
+	_, err := db.DB.Model(a).Returning("*").Insert()
 	return a, err
 }
 
@@ -35,7 +35,8 @@ func (a *Agency) Create(r *http.Request, currentUser User) (*Agency, error) {
 func (a *Agency) Save() (*Agency, error) {
 	// Update the Updated time
 	a.Updated = time.Now()
-	return a, nil
+	_, err := db.DB.Model(a).Update()
+	return a, err
 }
 
 /*

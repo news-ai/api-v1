@@ -64,6 +64,9 @@ func main() {
 
 	router.GET("/api/users", routes.UsersHandler)
 	router.GET("/api/users/:id", routes.UserHandler)
+	router.PATCH("/api/users/:id", routes.UserHandler)
+	router.GET("/api/users/:id/:action", routes.UserActionHandler)
+	router.POST("/api/users/:id/:action", routes.UserActionHandler)
 
 	app.Use(negroni.HandlerFunc(middleware.UpdateOrCreateUser))
 	app.Use(negroni.HandlerFunc(commonMiddleware.AttachParameters))
