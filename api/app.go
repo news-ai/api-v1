@@ -184,8 +184,8 @@ func main() {
 	// router.DELETE("/api/contacts/:id", tabulaeRoutes.ContactHandler)
 	// router.GET("/api/contacts/:id/:action", tabulaeRoutes.ContactActionHandler)
 
-	// router.GET("/api/files", tabulaeRoutes.FilesHandler)
-	// router.GET("/api/files/:id", tabulaeRoutes.FileHandler)
+	router.GET("/api/files", tabulaeRoutes.FilesHandler)
+	router.GET("/api/files/:id", tabulaeRoutes.FileHandler)
 	// router.GET("/api/files/:id/:action", tabulaeRoutes.FileActionHandler)
 	// router.POST("/api/files/:id/:action", tabulaeRoutes.FileActionHandler)
 
@@ -206,11 +206,11 @@ func main() {
 	// router.GET("/api/emails/:id/:action", tabulaeRoutes.EmailActionHandler)
 	// router.POST("/api/emails/:id/:action", tabulaeRoutes.EmailActionHandler)
 
-	// router.GET("/api/email-settings", tabulaeRoutes.EmailSettingsHandler)
-	// router.POST("/api/email-settings", tabulaeRoutes.EmailSettingsHandler)
-	// router.GET("/api/email-settings/:id", tabulaeRoutes.EmailSettingHandler)
-	// router.POST("/api/email-settings/:id", tabulaeRoutes.EmailSettingHandler)
-	// router.GET("/api/email-settings/:id/:action", tabulaeRoutes.EmailSettingActionHandler)
+	router.GET("/api/email-settings", tabulaeRoutes.EmailSettingsHandler)
+	router.POST("/api/email-settings", tabulaeRoutes.EmailSettingsHandler)
+	router.GET("/api/email-settings/:id", tabulaeRoutes.EmailSettingHandler)
+	router.POST("/api/email-settings/:id", tabulaeRoutes.EmailSettingHandler)
+	router.GET("/api/email-settings/:id/:action", tabulaeRoutes.EmailSettingActionHandler)
 
 	router.GET("/api/templates", tabulaeRoutes.TemplatesHandler)
 	router.POST("/api/templates", tabulaeRoutes.TemplatesHandler)

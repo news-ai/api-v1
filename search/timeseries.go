@@ -1,279 +1,276 @@
 package search
 
-// import (
-// 	"errors"
-// 	"net/http"
-// 	"strings"
-// 	"time"
+import (
+	"errors"
+	"log"
+	"net/http"
+	"strings"
+	"time"
 
-// 	"golang.org/x/net/context"
+	apiModels "github.com/news-ai/api-v1/models"
 
-// 	"google.golang.org/appengine/log"
+	elastic "github.com/news-ai/elastic-appengine"
+)
 
-// 	apiModels "github.com/news-ai/api/models"
+var (
+	elasticInstagramTimeseries *elastic.Elastic
+	elasticTwitterTimeseries   *elastic.Elastic
+)
 
-// 	elastic "github.com/news-ai/elastic-appengine"
-// )
+type TwitterTimeseries struct {
+	Username  string    `json:"Username"`
+	CreatedAt time.Time `json:"CreatedAt"`
+	Followers int       `json:"Followers"`
+	Following int       `json:"Following"`
+	Likes     int       `json:"Likes"`
+	Retweets  int       `json:"Retweets"`
+	Posts     int       `json:"Posts"`
+}
 
-// var (
-// 	elasticInstagramTimeseries *elastic.Elastic
-// 	elasticTwitterTimeseries   *elastic.Elastic
-// )
+type InstagramTimeseries struct {
+	Username  string    `json:"Username"`
+	CreatedAt time.Time `json:"CreatedAt"`
+	Followers int       `json:"Followers"`
+	Following int       `json:"Following"`
+	Likes     int       `json:"Likes"`
+	Comments  int       `json:"Comments"`
+	Posts     int       `json:"Posts"`
+}
 
-// type TwitterTimeseries struct {
-// 	Username  string    `json:"Username"`
-// 	CreatedAt time.Time `json:"CreatedAt"`
-// 	Followers int       `json:"Followers"`
-// 	Following int       `json:"Following"`
-// 	Likes     int       `json:"Likes"`
-// 	Retweets  int       `json:"Retweets"`
-// 	Posts     int       `json:"Posts"`
-// }
+func (tt *TwitterTimeseries) FillStruct(m map[string]interface{}) error {
+	for k, v := range m {
+		err := apiModels.SetField(tt, k, v)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
 
-// type InstagramTimeseries struct {
-// 	Username  string    `json:"Username"`
-// 	CreatedAt time.Time `json:"CreatedAt"`
-// 	Followers int       `json:"Followers"`
-// 	Following int       `json:"Following"`
-// 	Likes     int       `json:"Likes"`
-// 	Comments  int       `json:"Comments"`
-// 	Posts     int       `json:"Posts"`
-// }
+func (it *InstagramTimeseries) FillStruct(m map[string]interface{}) error {
+	for k, v := range m {
+		err := apiModels.SetField(it, k, v)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
 
-// func (tt *TwitterTimeseries) FillStruct(m map[string]interface{}) error {
-// 	for k, v := range m {
-// 		err := apiModels.SetField(tt, k, v)
-// 		if err != nil {
-// 			return err
-// 		}
-// 	}
-// 	return nil
-// }
+func searchTwitterTimeseries(elasticQuery interface{}) (interface{}, int, error) {
+	hits, err := elasticTwitterTimeseries.QueryStruct(elasticQuery)
+	if err != nil {
+		log.Printf("%v", err)
+		return nil, 0, err
+	}
 
-// func (it *InstagramTimeseries) FillStruct(m map[string]interface{}) error {
-// 	for k, v := range m {
-// 		err := apiModels.SetField(it, k, v)
-// 		if err != nil {
-// 			return err
-// 		}
-// 	}
-// 	return nil
-// }
+	profileHits := hits.Hits
 
-// func searchTwitterTimeseries(c context.Context, elasticQuery interface{}) (interface{}, int, error) {
-// 	hits, err := elasticTwitterTimeseries.QueryStruct(c, elasticQuery)
-// 	if err != nil {
-// 		log.Errorf(c, "%v", err)
-// 		return nil, 0, err
-// 	}
+	if len(profileHits) == 0 {
+		log.Printf("%v", profileHits)
+		return nil, 0, errors.New("No Twitter profile for this username")
+	}
 
-// 	profileHits := hits.Hits
+	var interfaceSlice = make([]interface{}, len(profileHits))
 
-// 	if len(profileHits) == 0 {
-// 		log.Infof(c, "%v", profileHits)
-// 		return nil, 0, errors.New("No Twitter profile for this username")
-// 	}
+	for i := 0; i < len(profileHits); i++ {
+		interfaceSlice[i] = profileHits[i].Source.Data
+	}
 
-// 	var interfaceSlice = make([]interface{}, len(profileHits))
+	return interfaceSlice, hits.Total, nil
+}
 
-// 	for i := 0; i < len(profileHits); i++ {
-// 		interfaceSlice[i] = profileHits[i].Source.Data
-// 	}
+func searchInstagramTimeseries(elasticQuery interface{}) (interface{}, int, error) {
+	hits, err := elasticInstagramTimeseries.QueryStruct(elasticQuery)
+	if err != nil {
+		log.Printf("%v", err)
+		return nil, 0, err
+	}
 
-// 	return interfaceSlice, hits.Total, nil
-// }
+	profileHits := hits.Hits
 
-// func searchInstagramTimeseries(c context.Context, elasticQuery interface{}) (interface{}, int, error) {
-// 	hits, err := elasticInstagramTimeseries.QueryStruct(c, elasticQuery)
-// 	if err != nil {
-// 		log.Errorf(c, "%v", err)
-// 		return nil, 0, err
-// 	}
+	if len(profileHits) == 0 {
+		log.Printf("%v", profileHits)
+		return nil, 0, errors.New("No Instagram profile for this username")
+	}
 
-// 	profileHits := hits.Hits
+	var interfaceSlice = make([]interface{}, len(profileHits))
 
-// 	if len(profileHits) == 0 {
-// 		log.Infof(c, "%v", profileHits)
-// 		return nil, 0, errors.New("No Instagram profile for this username")
-// 	}
+	for i := 0; i < len(profileHits); i++ {
+		interfaceSlice[i] = profileHits[i].Source.Data
+	}
 
-// 	var interfaceSlice = make([]interface{}, len(profileHits))
+	return interfaceSlice, hits.Total, nil
+}
 
-// 	for i := 0; i < len(profileHits); i++ {
-// 		interfaceSlice[i] = profileHits[i].Source.Data
-// 	}
+func searchInstagramTimeseriesByUsernames(elasticQuery interface{}) ([]InstagramTimeseries, error) {
+	hits, err := elasticInstagramTimeseries.QueryStructMGet(elasticQuery)
+	if err != nil {
+		log.Printf("%v", err)
+		return nil, err
+	}
 
-// 	return interfaceSlice, hits.Total, nil
-// }
+	instagramTimeseriesData := []InstagramTimeseries{}
+	for i := 0; i < len(hits); i++ {
+		if hits[i].Found {
+			rawInstagramTimeseries := hits[i].Source.Data
+			rawMap := rawInstagramTimeseries.(map[string]interface{})
+			instagramTimeseries := InstagramTimeseries{}
+			err := instagramTimeseries.FillStruct(rawMap)
+			if err != nil {
+				log.Printf("%v", err)
+			}
 
-// func searchInstagramTimeseriesByUsernames(c context.Context, elasticQuery interface{}) ([]InstagramTimeseries, error) {
-// 	hits, err := elasticInstagramTimeseries.QueryStructMGet(c, elasticQuery)
-// 	if err != nil {
-// 		log.Errorf(c, "%v", err)
-// 		return nil, err
-// 	}
+			instagramTimeseriesData = append(instagramTimeseriesData, instagramTimeseries)
+		}
+	}
 
-// 	instagramTimeseriesData := []InstagramTimeseries{}
-// 	for i := 0; i < len(hits); i++ {
-// 		if hits[i].Found {
-// 			rawInstagramTimeseries := hits[i].Source.Data
-// 			rawMap := rawInstagramTimeseries.(map[string]interface{})
-// 			instagramTimeseries := InstagramTimeseries{}
-// 			err := instagramTimeseries.FillStruct(rawMap)
-// 			if err != nil {
-// 				log.Errorf(c, "%v", err)
-// 			}
+	return instagramTimeseriesData, nil
+}
 
-// 			instagramTimeseriesData = append(instagramTimeseriesData, instagramTimeseries)
-// 		}
-// 	}
+func searchTwitterTimeseriesByUsernames(elasticQuery interface{}) ([]TwitterTimeseries, error) {
+	hits, err := elasticTwitterTimeseries.QueryStructMGet(elasticQuery)
+	if err != nil {
+		log.Printf("%v", err)
+		return nil, err
+	}
 
-// 	return instagramTimeseriesData, nil
-// }
+	twitterTimeseriesData := []TwitterTimeseries{}
+	for i := 0; i < len(hits); i++ {
+		if hits[i].Found {
+			rawTwitterTimeseries := hits[i].Source.Data
+			rawMap := rawTwitterTimeseries.(map[string]interface{})
+			twitterTimeseries := TwitterTimeseries{}
+			err := twitterTimeseries.FillStruct(rawMap)
+			if err != nil {
+				log.Printf("%v", err)
+			}
 
-// func searchTwitterTimeseriesByUsernames(c context.Context, elasticQuery interface{}) ([]TwitterTimeseries, error) {
-// 	hits, err := elasticTwitterTimeseries.QueryStructMGet(c, elasticQuery)
-// 	if err != nil {
-// 		log.Errorf(c, "%v", err)
-// 		return nil, err
-// 	}
+			twitterTimeseriesData = append(twitterTimeseriesData, twitterTimeseries)
+		}
+	}
 
-// 	twitterTimeseriesData := []TwitterTimeseries{}
-// 	for i := 0; i < len(hits); i++ {
-// 		if hits[i].Found {
-// 			rawTwitterTimeseries := hits[i].Source.Data
-// 			rawMap := rawTwitterTimeseries.(map[string]interface{})
-// 			twitterTimeseries := TwitterTimeseries{}
-// 			err := twitterTimeseries.FillStruct(rawMap)
-// 			if err != nil {
-// 				log.Errorf(c, "%v", err)
-// 			}
+	return twitterTimeseriesData, nil
+}
 
-// 			twitterTimeseriesData = append(twitterTimeseriesData, twitterTimeseries)
-// 		}
-// 	}
+func SearchInstagramTimeseriesByUsernames(r *http.Request, usernames []string) ([]InstagramTimeseries, error) {
+	if len(usernames) == 0 {
+		return nil, nil
+	}
 
-// 	return twitterTimeseriesData, nil
-// }
+	elasticQuery := ElasticMGetQuery{}
 
-// func SearchInstagramTimeseriesByUsernames(c context.Context, r *http.Request, usernames []string) ([]InstagramTimeseries, error) {
-// 	if len(usernames) == 0 {
-// 		return nil, nil
-// 	}
+	for i := 0; i < len(usernames); i++ {
+		if usernames[i] != "" {
+			dateToday := time.Now().Format("2006-01-02")
+			elasticQuery.Ids = append(elasticQuery.Ids, usernames[i]+"-"+dateToday)
+		}
+	}
 
-// 	elasticQuery := ElasticMGetQuery{}
+	return searchInstagramTimeseriesByUsernames(elasticQuery)
+}
 
-// 	for i := 0; i < len(usernames); i++ {
-// 		if usernames[i] != "" {
-// 			dateToday := time.Now().Format("2006-01-02")
-// 			elasticQuery.Ids = append(elasticQuery.Ids, usernames[i]+"-"+dateToday)
-// 		}
-// 	}
+func SearchInstagramTimeseriesByUsernamesWithDays(r *http.Request, usernames []string, days int) ([]InstagramTimeseries, error) {
+	if len(usernames) == 0 {
+		return nil, nil
+	}
 
-// 	return searchInstagramTimeseriesByUsernames(c, elasticQuery)
-// }
+	elasticQuery := ElasticMGetQuery{}
+	timeNow := time.Now()
 
-// func SearchInstagramTimeseriesByUsernamesWithDays(c context.Context, r *http.Request, usernames []string, days int) ([]InstagramTimeseries, error) {
-// 	if len(usernames) == 0 {
-// 		return nil, nil
-// 	}
+	for i := 0; i < len(usernames); i++ {
+		if usernames[i] != "" {
+			for x := 0; x < days; x++ {
+				dateFormatted := timeNow.AddDate(0, 0, -1*x).Format("2006-01-02")
+				elasticQuery.Ids = append(elasticQuery.Ids, usernames[i]+"-"+dateFormatted)
+			}
+		}
+	}
 
-// 	elasticQuery := ElasticMGetQuery{}
-// 	timeNow := time.Now()
+	return searchInstagramTimeseriesByUsernames(elasticQuery)
+}
 
-// 	for i := 0; i < len(usernames); i++ {
-// 		if usernames[i] != "" {
-// 			for x := 0; x < days; x++ {
-// 				dateFormatted := timeNow.AddDate(0, 0, -1*x).Format("2006-01-02")
-// 				elasticQuery.Ids = append(elasticQuery.Ids, usernames[i]+"-"+dateFormatted)
-// 			}
-// 		}
-// 	}
+func SearchTwitterTimeseriesByUsernames(r *http.Request, usernames []string) ([]TwitterTimeseries, error) {
+	if len(usernames) == 0 {
+		return nil, nil
+	}
 
-// 	return searchInstagramTimeseriesByUsernames(c, elasticQuery)
-// }
+	elasticQuery := ElasticMGetQuery{}
 
-// func SearchTwitterTimeseriesByUsernames(c context.Context, r *http.Request, usernames []string) ([]TwitterTimeseries, error) {
-// 	if len(usernames) == 0 {
-// 		return nil, nil
-// 	}
+	for i := 0; i < len(usernames); i++ {
+		if usernames[i] != "" {
+			dateToday := time.Now().Format("2006-01-02")
+			elasticQuery.Ids = append(elasticQuery.Ids, usernames[i]+"-"+dateToday)
+		}
+	}
 
-// 	elasticQuery := ElasticMGetQuery{}
+	return searchTwitterTimeseriesByUsernames(elasticQuery)
+}
 
-// 	for i := 0; i < len(usernames); i++ {
-// 		if usernames[i] != "" {
-// 			dateToday := time.Now().Format("2006-01-02")
-// 			elasticQuery.Ids = append(elasticQuery.Ids, usernames[i]+"-"+dateToday)
-// 		}
-// 	}
+func SearchTwitterTimeseriesByUsernamesWithDays(r *http.Request, usernames []string, days int) ([]TwitterTimeseries, error) {
+	if len(usernames) == 0 {
+		return nil, nil
+	}
 
-// 	return searchTwitterTimeseriesByUsernames(c, elasticQuery)
-// }
+	elasticQuery := ElasticMGetQuery{}
+	timeNow := time.Now()
 
-// func SearchTwitterTimeseriesByUsernamesWithDays(c context.Context, r *http.Request, usernames []string, days int) ([]TwitterTimeseries, error) {
-// 	if len(usernames) == 0 {
-// 		return nil, nil
-// 	}
+	for i := 0; i < len(usernames); i++ {
+		if usernames[i] != "" {
+			for x := 0; x < days; x++ {
+				dateFormatted := timeNow.AddDate(0, 0, -1*x).Format("2006-01-02")
+				elasticQuery.Ids = append(elasticQuery.Ids, usernames[i]+"-"+dateFormatted)
+			}
+		}
+	}
 
-// 	elasticQuery := ElasticMGetQuery{}
-// 	timeNow := time.Now()
+	return searchTwitterTimeseriesByUsernames(elasticQuery)
+}
 
-// 	for i := 0; i < len(usernames); i++ {
-// 		if usernames[i] != "" {
-// 			for x := 0; x < days; x++ {
-// 				dateFormatted := timeNow.AddDate(0, 0, -1*x).Format("2006-01-02")
-// 				elasticQuery.Ids = append(elasticQuery.Ids, usernames[i]+"-"+dateFormatted)
-// 			}
-// 		}
-// 	}
+func SearchInstagramTimeseriesByUsername(r *http.Request, username string) (interface{}, int, error) {
+	if username == "" {
+		return nil, 0, errors.New("Contact does not have a instagram username")
+	}
 
-// 	return searchTwitterTimeseriesByUsernames(c, elasticQuery)
-// }
+	offset := 0
+	limit := 31
 
-// func SearchInstagramTimeseriesByUsername(c context.Context, r *http.Request, username string) (interface{}, int, error) {
-// 	if username == "" {
-// 		return nil, 0, errors.New("Contact does not have a instagram username")
-// 	}
+	elasticQuery := elastic.ElasticQueryWithSort{}
+	elasticQuery.Size = limit
+	elasticQuery.From = offset
 
-// 	offset := 0
-// 	limit := 31
+	elasticUsernameQuery := ElasticUsernameQuery{}
+	elasticUsernameQuery.Term.Username = strings.ToLower(username)
+	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticUsernameQuery)
 
-// 	elasticQuery := elastic.ElasticQueryWithSort{}
-// 	elasticQuery.Size = limit
-// 	elasticQuery.From = offset
+	elasticCreatedAtDateQuery := ElasticSortDataCreatedAtQuery{}
+	elasticCreatedAtDateQuery.DataCreatedAt.Order = "desc"
+	elasticCreatedAtDateQuery.DataCreatedAt.Mode = "avg"
+	elasticQuery.Sort = append(elasticQuery.Sort, elasticCreatedAtDateQuery)
 
-// 	elasticUsernameQuery := ElasticUsernameQuery{}
-// 	elasticUsernameQuery.Term.Username = strings.ToLower(username)
-// 	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticUsernameQuery)
+	return searchInstagramTimeseries(elasticQuery)
+}
 
-// 	elasticCreatedAtDateQuery := ElasticSortDataCreatedAtQuery{}
-// 	elasticCreatedAtDateQuery.DataCreatedAt.Order = "desc"
-// 	elasticCreatedAtDateQuery.DataCreatedAt.Mode = "avg"
-// 	elasticQuery.Sort = append(elasticQuery.Sort, elasticCreatedAtDateQuery)
+func SearchTwitterTimeseriesByUsername(r *http.Request, username string) (interface{}, int, error) {
+	if username == "" {
+		return nil, 0, errors.New("Contact does not have a twitter username")
+	}
 
-// 	return searchInstagramTimeseries(c, elasticQuery)
-// }
+	offset := 0
+	limit := 31
 
-// func SearchTwitterTimeseriesByUsername(c context.Context, r *http.Request, username string) (interface{}, int, error) {
-// 	if username == "" {
-// 		return nil, 0, errors.New("Contact does not have a twitter username")
-// 	}
+	elasticQuery := elastic.ElasticQueryWithSort{}
+	elasticQuery.Size = limit
+	elasticQuery.From = offset
 
-// 	offset := 0
-// 	limit := 31
+	elasticUsernameQuery := ElasticUsernameQuery{}
+	elasticUsernameQuery.Term.Username = strings.ToLower(username)
+	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticUsernameQuery)
 
-// 	elasticQuery := elastic.ElasticQueryWithSort{}
-// 	elasticQuery.Size = limit
-// 	elasticQuery.From = offset
+	elasticCreatedAtDateQuery := ElasticSortDataCreatedAtQuery{}
+	elasticCreatedAtDateQuery.DataCreatedAt.Order = "desc"
+	elasticCreatedAtDateQuery.DataCreatedAt.Mode = "avg"
+	elasticQuery.Sort = append(elasticQuery.Sort, elasticCreatedAtDateQuery)
 
-// 	elasticUsernameQuery := ElasticUsernameQuery{}
-// 	elasticUsernameQuery.Term.Username = strings.ToLower(username)
-// 	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticUsernameQuery)
-
-// 	elasticCreatedAtDateQuery := ElasticSortDataCreatedAtQuery{}
-// 	elasticCreatedAtDateQuery.DataCreatedAt.Order = "desc"
-// 	elasticCreatedAtDateQuery.DataCreatedAt.Mode = "avg"
-// 	elasticQuery.Sort = append(elasticQuery.Sort, elasticCreatedAtDateQuery)
-
-// 	return searchTwitterTimeseries(c, elasticQuery)
-// }
+	return searchTwitterTimeseries(elasticQuery)
+}

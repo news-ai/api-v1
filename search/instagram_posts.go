@@ -1,155 +1,152 @@
 package search
 
-// import (
-// 	"errors"
-// 	"net/http"
-// 	"strings"
-// 	"time"
+import (
+	"errors"
+	"log"
+	"net/http"
+	"strings"
+	"time"
 
-// 	"golang.org/x/net/context"
+	gcontext "github.com/gorilla/context"
 
-// 	gcontext "github.com/gorilla/context"
+	apiModels "github.com/news-ai/api-v1/models"
 
-// 	"google.golang.org/appengine/log"
+	elastic "github.com/news-ai/elastic-appengine"
+)
 
-// 	apiModels "github.com/news-ai/api/models"
+var (
+	elasticInstagram     *elastic.Elastic
+	elasticInstagramUser *elastic.Elastic
+)
 
-// 	elastic "github.com/news-ai/elastic-appengine"
-// )
+type InstagramPost struct {
+	Type string `json:"type"`
 
-// var (
-// 	elasticInstagram     *elastic.Elastic
-// 	elasticInstagramUser *elastic.Elastic
-// )
+	Video       string   `json:"video"`
+	Tags        []string `json:"tags"`
+	Location    string   `json:"location"`
+	Coordinates string   `json:"location"`
+	Comments    int      `json:"comments"`
+	Likes       int      `json:"likes"`
 
-// type InstagramPost struct {
-// 	Type string `json:"type"`
+	InstagramWidth  int `json:"instagramwidth"`
+	InstagramHeight int `json:"instagramheight"`
 
-// 	Video       string   `json:"video"`
-// 	Tags        []string `json:"tags"`
-// 	Location    string   `json:"location"`
-// 	Coordinates string   `json:"location"`
-// 	Comments    int      `json:"comments"`
-// 	Likes       int      `json:"likes"`
+	Link  string `json:"link"`
+	Image string `json:"image"`
 
-// 	InstagramWidth  int `json:"instagramwidth"`
-// 	InstagramHeight int `json:"instagramheight"`
+	Caption     string `json:"caption"`
+	InstagramId string `json:"instagramid"`
+	Username    string `json:"Username"`
 
-// 	Link  string `json:"link"`
-// 	Image string `json:"image"`
+	IsDeleted bool
 
-// 	Caption     string `json:"caption"`
-// 	InstagramId string `json:"instagramid"`
-// 	Username    string `json:"Username"`
+	CreatedAt time.Time `json:"createdat"`
+}
 
-// 	IsDeleted bool
+func (ip *InstagramPost) FillStruct(m map[string]interface{}) error {
+	for k, v := range m {
+		err := apiModels.SetField(ip, k, v)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
 
-// 	CreatedAt time.Time `json:"createdat"`
-// }
+func searchInstagramPost(elasticQuery interface{}, usernames []string) ([]InstagramPost, int, error) {
+	hits, err := elasticInstagram.QueryStruct(elasticQuery)
+	if err != nil {
+		log.Printf("%v", err)
+		return []InstagramPost{}, 0, err
+	}
 
-// func (ip *InstagramPost) FillStruct(m map[string]interface{}) error {
-// 	for k, v := range m {
-// 		err := apiModels.SetField(ip, k, v)
-// 		if err != nil {
-// 			return err
-// 		}
-// 	}
-// 	return nil
-// }
+	usernamesMap := map[string]bool{}
+	for i := 0; i < len(usernames); i++ {
+		usernamesMap[strings.ToLower(usernames[i])] = true
+	}
 
-// func searchInstagramPost(c context.Context, elasticQuery interface{}, usernames []string) ([]InstagramPost, int, error) {
-// 	hits, err := elasticInstagram.QueryStruct(c, elasticQuery)
-// 	if err != nil {
-// 		log.Errorf(c, "%v", err)
-// 		return []InstagramPost{}, 0, err
-// 	}
+	instagramHits := hits.Hits
+	instagramPosts := []InstagramPost{}
+	for i := 0; i < len(instagramHits); i++ {
+		rawInstagramPost := instagramHits[i].Source.Data
+		rawMap := rawInstagramPost.(map[string]interface{})
+		instagramPost := InstagramPost{}
+		err := instagramPost.FillStruct(rawMap)
+		if err != nil {
+			log.Printf("%v", err)
+		}
 
-// 	usernamesMap := map[string]bool{}
-// 	for i := 0; i < len(usernames); i++ {
-// 		usernamesMap[strings.ToLower(usernames[i])] = true
-// 	}
+		if _, ok := usernamesMap[strings.ToLower(instagramPost.Username)]; !ok {
+			continue
+		}
 
-// 	instagramHits := hits.Hits
-// 	instagramPosts := []InstagramPost{}
-// 	for i := 0; i < len(instagramHits); i++ {
-// 		rawInstagramPost := instagramHits[i].Source.Data
-// 		rawMap := rawInstagramPost.(map[string]interface{})
-// 		instagramPost := InstagramPost{}
-// 		err := instagramPost.FillStruct(rawMap)
-// 		if err != nil {
-// 			log.Errorf(c, "%v", err)
-// 		}
+		instagramPost.Type = "instagrams"
+		instagramPosts = append(instagramPosts, instagramPost)
+	}
 
-// 		if _, ok := usernamesMap[strings.ToLower(instagramPost.Username)]; !ok {
-// 			continue
-// 		}
+	return instagramPosts, hits.Total, nil
+}
 
-// 		instagramPost.Type = "instagrams"
-// 		instagramPosts = append(instagramPosts, instagramPost)
-// 	}
+func searchInstagramProfile(elasticQuery interface{}, username string) (interface{}, error) {
+	hits, err := elasticInstagramUser.QueryStruct(elasticQuery)
+	if err != nil {
+		log.Printf("%v", err)
+		return nil, err
+	}
 
-// 	return instagramPosts, hits.Total, nil
-// }
+	instagramProfileHits := hits.Hits
 
-// func searchInstagramProfile(c context.Context, elasticQuery interface{}, username string) (interface{}, error) {
-// 	hits, err := elasticInstagramUser.QueryStruct(c, elasticQuery)
-// 	if err != nil {
-// 		log.Errorf(c, "%v", err)
-// 		return nil, err
-// 	}
+	if len(instagramProfileHits) == 0 {
+		log.Printf("%v", instagramProfileHits)
+		return nil, errors.New("No Instagram profile for this username")
+	}
 
-// 	instagramProfileHits := hits.Hits
+	return instagramProfileHits[0].Source.Data, nil
+}
 
-// 	if len(instagramProfileHits) == 0 {
-// 		log.Infof(c, "%v", instagramProfileHits)
-// 		return nil, errors.New("No Instagram profile for this username")
-// 	}
+func SearchInstagramPostsByUsername(r *http.Request, username string) ([]InstagramPost, int, error) {
+	if username == "" {
+		return []InstagramPost{}, 0, nil
+	}
 
-// 	return instagramProfileHits[0].Source.Data, nil
-// }
+	offset := gcontext.Get(r, "offset").(int)
+	limit := gcontext.Get(r, "limit").(int)
 
-// func SearchInstagramPostsByUsername(c context.Context, r *http.Request, username string) ([]InstagramPost, int, error) {
-// 	if username == "" {
-// 		return []InstagramPost{}, 0, nil
-// 	}
+	elasticQuery := elastic.ElasticFilterWithSort{}
+	elasticQuery.Size = limit
+	elasticQuery.From = offset
 
-// 	offset := gcontext.Get(r, "offset").(int)
-// 	limit := gcontext.Get(r, "limit").(int)
+	elasticUsernameQuery := ElasticUsernameQuery{}
+	elasticUsernameQuery.Term.Username = strings.ToLower(username)
 
-// 	elasticQuery := elastic.ElasticFilterWithSort{}
-// 	elasticQuery.Size = limit
-// 	elasticQuery.From = offset
+	elasticQuery.Query.Bool.Should = append(elasticQuery.Query.Bool.Should, elasticUsernameQuery)
 
-// 	elasticUsernameQuery := ElasticUsernameQuery{}
-// 	elasticUsernameQuery.Term.Username = strings.ToLower(username)
+	elasticQuery.Query.Bool.MinimumShouldMatch = "100%"
 
-// 	elasticQuery.Query.Bool.Should = append(elasticQuery.Query.Bool.Should, elasticUsernameQuery)
+	elasticCreatedAtQuery := ElasticSortDataCreatedAtQuery{}
+	elasticCreatedAtQuery.DataCreatedAt.Order = "desc"
+	elasticCreatedAtQuery.DataCreatedAt.Mode = "avg"
+	elasticQuery.Sort = append(elasticQuery.Sort, elasticCreatedAtQuery)
 
-// 	elasticQuery.Query.Bool.MinimumShouldMatch = "100%"
+	return searchInstagramPost(elasticQuery, []string{username})
+}
 
-// 	elasticCreatedAtQuery := ElasticSortDataCreatedAtQuery{}
-// 	elasticCreatedAtQuery.DataCreatedAt.Order = "desc"
-// 	elasticCreatedAtQuery.DataCreatedAt.Mode = "avg"
-// 	elasticQuery.Sort = append(elasticQuery.Sort, elasticCreatedAtQuery)
+func SearchInstagramProfileByUsername(r *http.Request, username string) (interface{}, error) {
+	if username == "" {
+		return nil, errors.New("Contact does not have a instagram username")
+	}
 
-// 	return searchInstagramPost(c, elasticQuery, []string{username})
-// }
+	offset := 0
+	limit := 1
 
-// func SearchInstagramProfileByUsername(c context.Context, r *http.Request, username string) (interface{}, error) {
-// 	if username == "" {
-// 		return nil, errors.New("Contact does not have a instagram username")
-// 	}
+	elasticQuery := elastic.ElasticQuery{}
+	elasticQuery.Size = limit
+	elasticQuery.From = offset
 
-// 	offset := 0
-// 	limit := 1
+	elasticUsernameQuery := ElasticUsernameQuery{}
+	elasticUsernameQuery.Term.Username = strings.ToLower(username)
+	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticUsernameQuery)
 
-// 	elasticQuery := elastic.ElasticQuery{}
-// 	elasticQuery.Size = limit
-// 	elasticQuery.From = offset
-
-// 	elasticUsernameQuery := ElasticUsernameQuery{}
-// 	elasticUsernameQuery.Term.Username = strings.ToLower(username)
-// 	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticUsernameQuery)
-
-// 	return searchInstagramProfile(c, elasticQuery, username)
-// }
+	return searchInstagramProfile(elasticQuery, username)
+}

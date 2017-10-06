@@ -1,192 +1,189 @@
 package search
 
-// import (
-// 	"fmt"
-// 	"net/http"
-// 	"strings"
-// 	"time"
+import (
+	"fmt"
+	"log"
+	"net/http"
+	"strings"
+	"time"
 
-// 	"golang.org/x/net/context"
+	gcontext "github.com/gorilla/context"
+	elastic "github.com/news-ai/elastic-appengine"
 
-// 	gcontext "github.com/gorilla/context"
+	apiModels "github.com/news-ai/api-v1/models"
 
-// 	"google.golang.org/appengine/log"
+	"github.com/news-ai/tabulae-v1/models"
+)
 
-// 	apiModels "github.com/news-ai/api/models"
+var (
+	elasticFeed *elastic.Elastic
+)
 
-// 	elastic "github.com/news-ai/elastic-appengine"
-// 	"github.com/news-ai/tabulae/models"
-// )
+type Feed struct {
+	Type      string    `json:"type"`
+	CreatedAt time.Time `json:"createdat"`
 
-// var (
-// 	elasticFeed *elastic.Elastic
-// )
+	Title         string `json:"title"`
+	Author        string `json:"author"`
+	Url           string `json:"url"`
+	Summary       string `json:"summary"`
+	FeedURL       string `json:"feedurl"`
+	PublicationId int64  `json:"publicationid"`
 
-// type Feed struct {
-// 	Type      string    `json:"type"`
-// 	CreatedAt time.Time `json:"createdat"`
+	// Shared between tweet and instagram post
+	Text string `json:"text"`
 
-// 	Title         string `json:"title"`
-// 	Author        string `json:"author"`
-// 	Url           string `json:"url"`
-// 	Summary       string `json:"summary"`
-// 	FeedURL       string `json:"feedurl"`
-// 	PublicationId int64  `json:"publicationid"`
+	TweetId         int64  `json:"tweetid"`
+	TweetIdStr      string `json:"tweetidstr"`
+	Username        string `json:"username"`
+	TwitterLikes    int    `json:"twitterlikes"`
+	TwitterRetweets int    `json:"twitterretweets"`
 
-// 	// Shared between tweet and instagram post
-// 	Text string `json:"text"`
+	InstagramUsername string `json:"instagramusername"`
+	InstagramId       string `json:"instagramid"`
+	InstagramImage    string `json:"instagramimage"`
+	InstagramVideo    string `json:"instagramvideo"`
+	InstagramLink     string `json:"instagramlink"`
+	InstagramLikes    int    `json:"instagramlikes"`
+	InstagramComments int    `json:"instagramcomments"`
+	InstagramWidth    int    `json:"instagramwidth"`
+	InstagramHeight   int    `json:"instagramheight"`
+}
 
-// 	TweetId         int64  `json:"tweetid"`
-// 	TweetIdStr      string `json:"tweetidstr"`
-// 	Username        string `json:"username"`
-// 	TwitterLikes    int    `json:"twitterlikes"`
-// 	TwitterRetweets int    `json:"twitterretweets"`
+func (f *Feed) FillStruct(m map[string]interface{}) error {
+	for k, v := range m {
+		err := apiModels.SetField(f, k, v)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
 
-// 	InstagramUsername string `json:"instagramusername"`
-// 	InstagramId       string `json:"instagramid"`
-// 	InstagramImage    string `json:"instagramimage"`
-// 	InstagramVideo    string `json:"instagramvideo"`
-// 	InstagramLink     string `json:"instagramlink"`
-// 	InstagramLikes    int    `json:"instagramlikes"`
-// 	InstagramComments int    `json:"instagramcomments"`
-// 	InstagramWidth    int    `json:"instagramwidth"`
-// 	InstagramHeight   int    `json:"instagramheight"`
-// }
+func searchFeed(elasticQuery interface{}, contacts []models.Contact, feedUrls []models.Feed) ([]Feed, int, error) {
+	hits, err := elasticFeed.QueryStruct(elasticQuery)
+	if err != nil {
+		log.Printf("%v", err)
+		return []Feed{}, 0, err
+	}
 
-// func (f *Feed) FillStruct(m map[string]interface{}) error {
-// 	for k, v := range m {
-// 		err := apiModels.SetField(f, k, v)
-// 		if err != nil {
-// 			return err
-// 		}
-// 	}
-// 	return nil
-// }
+	feedsMap := map[string]bool{}
+	for i := 0; i < len(feedUrls); i++ {
+		feedsMap[strings.ToLower(feedUrls[i].FeedURL)] = true
+	}
 
-// func searchFeed(c context.Context, elasticQuery interface{}, contacts []models.Contact, feedUrls []models.Feed) ([]Feed, int, error) {
-// 	hits, err := elasticFeed.QueryStruct(c, elasticQuery)
-// 	if err != nil {
-// 		log.Errorf(c, "%v", err)
-// 		return []Feed{}, 0, err
-// 	}
+	twitterUsernamesMap := map[string]bool{}
+	for i := 0; i < len(contacts); i++ {
+		twitterUsernamesMap[strings.ToLower(contacts[i].Twitter)] = true
+	}
 
-// 	feedsMap := map[string]bool{}
-// 	for i := 0; i < len(feedUrls); i++ {
-// 		feedsMap[strings.ToLower(feedUrls[i].FeedURL)] = true
-// 	}
+	instagramUsernamesMap := map[string]bool{}
+	for i := 0; i < len(contacts); i++ {
+		instagramUsernamesMap[strings.ToLower(contacts[i].Instagram)] = true
+	}
 
-// 	twitterUsernamesMap := map[string]bool{}
-// 	for i := 0; i < len(contacts); i++ {
-// 		twitterUsernamesMap[strings.ToLower(contacts[i].Twitter)] = true
-// 	}
+	feedHits := hits.Hits
+	feeds := []Feed{}
+	for i := 0; i < len(feedHits); i++ {
+		rawFeed := feedHits[i].Source.Data
+		rawMap := rawFeed.(map[string]interface{})
+		feed := Feed{}
+		err := feed.FillStruct(rawMap)
+		if err != nil {
+			log.Printf("%v", err)
+		}
 
-// 	instagramUsernamesMap := map[string]bool{}
-// 	for i := 0; i < len(contacts); i++ {
-// 		instagramUsernamesMap[strings.ToLower(contacts[i].Instagram)] = true
-// 	}
+		feed.Type = strings.ToLower(feed.Type)
+		feed.Type += "s"
 
-// 	feedHits := hits.Hits
-// 	feeds := []Feed{}
-// 	for i := 0; i < len(feedHits); i++ {
-// 		rawFeed := feedHits[i].Source.Data
-// 		rawMap := rawFeed.(map[string]interface{})
-// 		feed := Feed{}
-// 		err := feed.FillStruct(rawMap)
-// 		if err != nil {
-// 			log.Errorf(c, "%v", err)
-// 		}
+		if feed.FeedURL != "" {
+			// Reverse the #40 that we encoded it with
+			if _, ok := feedsMap[strings.ToLower(feed.FeedURL)]; !ok {
+				continue
+			}
+		} else {
+			if feed.Type == "tweets" {
+				if _, ok := twitterUsernamesMap[strings.ToLower(feed.Username)]; !ok {
+					continue
+				}
+			} else if feed.Type == "instagrams" {
+				if _, ok := instagramUsernamesMap[strings.ToLower(feed.InstagramUsername)]; !ok {
+					continue
+				}
+			}
+		}
 
-// 		feed.Type = strings.ToLower(feed.Type)
-// 		feed.Type += "s"
+		feeds = append(feeds, feed)
+	}
 
-// 		if feed.FeedURL != "" {
-// 			// Reverse the #40 that we encoded it with
-// 			if _, ok := feedsMap[strings.ToLower(feed.FeedURL)]; !ok {
-// 				continue
-// 			}
-// 		} else {
-// 			if feed.Type == "tweets" {
-// 				if _, ok := twitterUsernamesMap[strings.ToLower(feed.Username)]; !ok {
-// 					continue
-// 				}
-// 			} else if feed.Type == "instagrams" {
-// 				if _, ok := instagramUsernamesMap[strings.ToLower(feed.InstagramUsername)]; !ok {
-// 					continue
-// 				}
-// 			}
-// 		}
+	return feeds, hits.Total, nil
+}
 
-// 		feeds = append(feeds, feed)
-// 	}
+func SearchFeedForContacts(r *http.Request, contacts []models.Contact, feeds []models.Feed) ([]Feed, int, error) {
+	// If contacts or feeds are empty return right away
+	if len(contacts) == 0 && len(feeds) == 0 {
+		return []Feed{}, 0, nil
+	}
 
-// 	return feeds, hits.Total, nil
-// }
+	offset := gcontext.Get(r, "offset").(int)
+	limit := gcontext.Get(r, "limit").(int)
 
-// func SearchFeedForContacts(c context.Context, r *http.Request, contacts []models.Contact, feeds []models.Feed) ([]Feed, int, error) {
-// 	// If contacts or feeds are empty return right away
-// 	if len(contacts) == 0 && len(feeds) == 0 {
-// 		return []Feed{}, 0, nil
-// 	}
+	elasticQuery := elastic.ElasticFilterWithSort{}
+	elasticQuery.Size = limit
+	elasticQuery.From = offset
 
-// 	offset := gcontext.Get(r, "offset").(int)
-// 	limit := gcontext.Get(r, "limit").(int)
+	for i := 0; i < len(contacts); i++ {
+		if contacts[i].Twitter != "" {
+			elasticUsernameQuery := ElasticUsernameQuery{}
+			elasticUsernameQuery.Term.Username = strings.ToLower(contacts[i].Twitter)
+			elasticQuery.Query.Bool.Should = append(elasticQuery.Query.Bool.Should, elasticUsernameQuery)
+		}
 
-// 	elasticQuery := elastic.ElasticFilterWithSort{}
-// 	elasticQuery.Size = limit
-// 	elasticQuery.From = offset
+		if contacts[i].Instagram != "" {
+			elasticInstagramUsernameQuery := ElasticInstagramUsernameQuery{}
+			elasticInstagramUsernameQuery.Term.InstagramUsername = strings.ToLower(contacts[i].Instagram)
+			elasticQuery.Query.Bool.Should = append(elasticQuery.Query.Bool.Should, elasticInstagramUsernameQuery)
+		}
+	}
 
-// 	for i := 0; i < len(contacts); i++ {
-// 		if contacts[i].Twitter != "" {
-// 			elasticUsernameQuery := ElasticUsernameQuery{}
-// 			elasticUsernameQuery.Term.Username = strings.ToLower(contacts[i].Twitter)
-// 			elasticQuery.Query.Bool.Should = append(elasticQuery.Query.Bool.Should, elasticUsernameQuery)
-// 		}
+	for i := 0; i < len(feeds); i++ {
+		if feeds[i].FeedURL != "" {
+			elasticFeedUrlQuery := ElasticFeedUrlQuery{}
+			elasticFeedUrlQuery.Match.FeedURL = strings.ToLower(feeds[i].FeedURL)
+			elasticQuery.Query.Bool.Should = append(elasticQuery.Query.Bool.Should, elasticFeedUrlQuery)
+		}
+	}
 
-// 		if contacts[i].Instagram != "" {
-// 			elasticInstagramUsernameQuery := ElasticInstagramUsernameQuery{}
-// 			elasticInstagramUsernameQuery.Term.InstagramUsername = strings.ToLower(contacts[i].Instagram)
-// 			elasticQuery.Query.Bool.Should = append(elasticQuery.Query.Bool.Should, elasticInstagramUsernameQuery)
-// 		}
-// 	}
+	if len(elasticQuery.Query.Bool.Should) == 0 {
+		return []Feed{}, 0, nil
+	}
 
-// 	for i := 0; i < len(feeds); i++ {
-// 		if feeds[i].FeedURL != "" {
-// 			elasticFeedUrlQuery := ElasticFeedUrlQuery{}
-// 			elasticFeedUrlQuery.Match.FeedURL = strings.ToLower(feeds[i].FeedURL)
-// 			elasticQuery.Query.Bool.Should = append(elasticQuery.Query.Bool.Should, elasticFeedUrlQuery)
-// 		}
-// 	}
+	minMatch := "50%"
+	if len(elasticQuery.Query.Bool.Should) > 2 {
+		approxMatch := float64(100 / len(elasticQuery.Query.Bool.Should))
+		minMatch = fmt.Sprint(approxMatch) + "%"
+	}
 
-// 	if len(elasticQuery.Query.Bool.Should) == 0 {
-// 		return []Feed{}, 0, nil
-// 	}
+	minScore := float32(0.2)
+	if len(elasticQuery.Query.Bool.Should) == 1 {
+		minScore = float32(1.0)
+	}
 
-// 	minMatch := "50%"
-// 	if len(elasticQuery.Query.Bool.Should) > 2 {
-// 		approxMatch := float64(100 / len(elasticQuery.Query.Bool.Should))
-// 		minMatch = fmt.Sprint(approxMatch) + "%"
-// 	}
+	if len(elasticQuery.Query.Bool.Should) > 10 {
+		minScore = float32(0.1)
+	}
 
-// 	minScore := float32(0.2)
-// 	if len(elasticQuery.Query.Bool.Should) == 1 {
-// 		minScore = float32(1.0)
-// 	}
+	if len(elasticQuery.Query.Bool.Should) > 20 {
+		minScore = float32(0.0)
+	}
 
-// 	if len(elasticQuery.Query.Bool.Should) > 10 {
-// 		minScore = float32(0.1)
-// 	}
+	elasticQuery.Query.Bool.MinimumShouldMatch = minMatch
+	elasticQuery.MinScore = minScore
 
-// 	if len(elasticQuery.Query.Bool.Should) > 20 {
-// 		minScore = float32(0.0)
-// 	}
+	elasticCreatedAtQuery := ElasticSortDataCreatedAtQuery{}
+	elasticCreatedAtQuery.DataCreatedAt.Order = "desc"
+	elasticCreatedAtQuery.DataCreatedAt.Mode = "avg"
+	elasticQuery.Sort = append(elasticQuery.Sort, elasticCreatedAtQuery)
 
-// 	elasticQuery.Query.Bool.MinimumShouldMatch = minMatch
-// 	elasticQuery.MinScore = minScore
-
-// 	elasticCreatedAtQuery := ElasticSortDataCreatedAtQuery{}
-// 	elasticCreatedAtQuery.DataCreatedAt.Order = "desc"
-// 	elasticCreatedAtQuery.DataCreatedAt.Mode = "avg"
-// 	elasticQuery.Sort = append(elasticQuery.Sort, elasticCreatedAtQuery)
-
-// 	return searchFeed(c, elasticQuery, contacts, feeds)
-// }
+	return searchFeed(elasticQuery, contacts, feeds)
+}

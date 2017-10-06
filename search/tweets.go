@@ -1,181 +1,178 @@
 package search
 
-// import (
-// 	"errors"
-// 	"net/http"
-// 	"strings"
-// 	"time"
+import (
+	"errors"
+	"log"
+	"net/http"
+	"strings"
+	"time"
 
-// 	"golang.org/x/net/context"
+	gcontext "github.com/gorilla/context"
 
-// 	gcontext "github.com/gorilla/context"
+	apiModels "github.com/news-ai/api-v1/models"
 
-// 	"google.golang.org/appengine/log"
+	elastic "github.com/news-ai/elastic-appengine"
+)
 
-// 	apiModels "github.com/news-ai/api/models"
+var (
+	elasticTweet       *elastic.Elastic
+	elasticTwitterUser *elastic.Elastic
+)
 
-// 	elastic "github.com/news-ai/elastic-appengine"
-// )
+type Tweet struct {
+	Type string `json:"type"`
 
-// var (
-// 	elasticTweet       *elastic.Elastic
-// 	elasticTwitterUser *elastic.Elastic
-// )
+	Text       string    `json:"text"`
+	TweetId    int64     `json:"tweetid"`
+	TweetIdStr string    `json:"tweetidstr"`
+	Username   string    `json:"username"`
+	CreatedAt  time.Time `json:"createdat"`
 
-// type Tweet struct {
-// 	Type string `json:"type"`
+	Likes       int    `json:"likes"`
+	Retweets    int    `json:"retweets"`
+	Place       string `json:"place"`
+	Coordinates string `json:"coordinates"`
+	Retweeted   bool   `json:"retweeted"`
+}
 
-// 	Text       string    `json:"text"`
-// 	TweetId    int64     `json:"tweetid"`
-// 	TweetIdStr string    `json:"tweetidstr"`
-// 	Username   string    `json:"username"`
-// 	CreatedAt  time.Time `json:"createdat"`
+func (t *Tweet) FillStruct(m map[string]interface{}) error {
+	for k, v := range m {
+		err := apiModels.SetField(t, k, v)
+		if err != nil {
+			// return err
+		}
+	}
+	return nil
+}
 
-// 	Likes       int    `json:"likes"`
-// 	Retweets    int    `json:"retweets"`
-// 	Place       string `json:"place"`
-// 	Coordinates string `json:"coordinates"`
-// 	Retweeted   bool   `json:"retweeted"`
-// }
+func searchTweet(elasticQuery interface{}, usernames []string) ([]Tweet, int, error) {
+	hits, err := elasticTweet.QueryStruct(elasticQuery)
+	if err != nil {
+		log.Printf("%v", err)
+		return []Tweet{}, 0, err
+	}
 
-// func (t *Tweet) FillStruct(m map[string]interface{}) error {
-// 	for k, v := range m {
-// 		err := apiModels.SetField(t, k, v)
-// 		if err != nil {
-// 			// return err
-// 		}
-// 	}
-// 	return nil
-// }
+	usernamesMap := map[string]bool{}
+	for i := 0; i < len(usernames); i++ {
+		usernamesMap[strings.ToLower(usernames[i])] = true
+	}
 
-// func searchTweet(c context.Context, elasticQuery interface{}, usernames []string) ([]Tweet, int, error) {
-// 	hits, err := elasticTweet.QueryStruct(c, elasticQuery)
-// 	if err != nil {
-// 		log.Errorf(c, "%v", err)
-// 		return []Tweet{}, 0, err
-// 	}
+	tweetHits := hits.Hits
+	tweets := []Tweet{}
+	for i := 0; i < len(tweetHits); i++ {
+		rawTweet := tweetHits[i].Source.Data
+		rawMap := rawTweet.(map[string]interface{})
+		tweet := Tweet{}
+		err := tweet.FillStruct(rawMap)
+		if err != nil {
+			log.Printf("%v", err)
+		}
 
-// 	usernamesMap := map[string]bool{}
-// 	for i := 0; i < len(usernames); i++ {
-// 		usernamesMap[strings.ToLower(usernames[i])] = true
-// 	}
+		if _, ok := usernamesMap[strings.ToLower(tweet.Username)]; !ok {
+			continue
+		}
 
-// 	tweetHits := hits.Hits
-// 	tweets := []Tweet{}
-// 	for i := 0; i < len(tweetHits); i++ {
-// 		rawTweet := tweetHits[i].Source.Data
-// 		rawMap := rawTweet.(map[string]interface{})
-// 		tweet := Tweet{}
-// 		err := tweet.FillStruct(rawMap)
-// 		if err != nil {
-// 			log.Errorf(c, "%v", err)
-// 		}
+		tweet.Type = "tweets"
+		tweets = append(tweets, tweet)
+	}
 
-// 		if _, ok := usernamesMap[strings.ToLower(tweet.Username)]; !ok {
-// 			continue
-// 		}
+	return tweets, hits.Total, nil
+}
 
-// 		tweet.Type = "tweets"
-// 		tweets = append(tweets, tweet)
-// 	}
+func searchTwitterProfile(elasticQuery interface{}, username string) (interface{}, error) {
+	hits, err := elasticTwitterUser.QueryStruct(elasticQuery)
+	if err != nil {
+		log.Printf("%v", err)
+		return nil, err
+	}
 
-// 	return tweets, hits.Total, nil
-// }
+	twitterProfileHits := hits.Hits
 
-// func searchTwitterProfile(c context.Context, elasticQuery interface{}, username string) (interface{}, error) {
-// 	hits, err := elasticTwitterUser.QueryStruct(c, elasticQuery)
-// 	if err != nil {
-// 		log.Errorf(c, "%v", err)
-// 		return nil, err
-// 	}
+	if len(twitterProfileHits) == 0 {
+		log.Printf("%v", twitterProfileHits)
+		return nil, errors.New("No Twitter profile for this username")
+	}
 
-// 	twitterProfileHits := hits.Hits
+	return twitterProfileHits[0].Source.Data, nil
+}
 
-// 	if len(twitterProfileHits) == 0 {
-// 		log.Infof(c, "%v", twitterProfileHits)
-// 		return nil, errors.New("No Twitter profile for this username")
-// 	}
+func SearchProfileByUsername(r *http.Request, username string) (interface{}, error) {
+	if username == "" {
+		return nil, errors.New("Contact does not have a twitter username")
+	}
 
-// 	return twitterProfileHits[0].Source.Data, nil
-// }
+	offset := 0
+	limit := 1
 
-// func SearchProfileByUsername(c context.Context, r *http.Request, username string) (interface{}, error) {
-// 	if username == "" {
-// 		return nil, errors.New("Contact does not have a twitter username")
-// 	}
+	elasticQuery := elastic.ElasticQuery{}
+	elasticQuery.Size = limit
+	elasticQuery.From = offset
 
-// 	offset := 0
-// 	limit := 1
+	elasticUsernameQuery := ElasticUsernameQuery{}
+	elasticUsernameQuery.Term.Username = strings.ToLower(username)
+	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticUsernameQuery)
 
-// 	elasticQuery := elastic.ElasticQuery{}
-// 	elasticQuery.Size = limit
-// 	elasticQuery.From = offset
+	return searchTwitterProfile(elasticQuery, username)
+}
 
-// 	elasticUsernameQuery := ElasticUsernameQuery{}
-// 	elasticUsernameQuery.Term.Username = strings.ToLower(username)
-// 	elasticQuery.Query.Bool.Must = append(elasticQuery.Query.Bool.Must, elasticUsernameQuery)
+func SearchTweetsByUsername(r *http.Request, username string) ([]Tweet, int, error) {
+	if username == "" {
+		return []Tweet{}, 0, nil
+	}
 
-// 	return searchTwitterProfile(c, elasticQuery, username)
-// }
+	offset := gcontext.Get(r, "offset").(int)
+	limit := gcontext.Get(r, "limit").(int)
 
-// func SearchTweetsByUsername(c context.Context, r *http.Request, username string) ([]Tweet, int, error) {
-// 	if username == "" {
-// 		return []Tweet{}, 0, nil
-// 	}
+	elasticQuery := elastic.ElasticFilterWithSort{}
+	elasticQuery.Size = limit
+	elasticQuery.From = offset
 
-// 	offset := gcontext.Get(r, "offset").(int)
-// 	limit := gcontext.Get(r, "limit").(int)
+	elasticUsernameQuery := ElasticUsernameQuery{}
+	elasticUsernameQuery.Term.Username = strings.ToLower(username)
 
-// 	elasticQuery := elastic.ElasticFilterWithSort{}
-// 	elasticQuery.Size = limit
-// 	elasticQuery.From = offset
+	elasticQuery.Query.Bool.Should = append(elasticQuery.Query.Bool.Should, elasticUsernameQuery)
 
-// 	elasticUsernameQuery := ElasticUsernameQuery{}
-// 	elasticUsernameQuery.Term.Username = strings.ToLower(username)
+	elasticQuery.Query.Bool.MinimumShouldMatch = "100%"
 
-// 	elasticQuery.Query.Bool.Should = append(elasticQuery.Query.Bool.Should, elasticUsernameQuery)
+	elasticCreatedAtQuery := ElasticSortDataCreatedAtQuery{}
+	elasticCreatedAtQuery.DataCreatedAt.Order = "desc"
+	elasticCreatedAtQuery.DataCreatedAt.Mode = "avg"
+	elasticQuery.Sort = append(elasticQuery.Sort, elasticCreatedAtQuery)
 
-// 	elasticQuery.Query.Bool.MinimumShouldMatch = "100%"
+	return searchTweet(elasticQuery, []string{username})
+}
 
-// 	elasticCreatedAtQuery := ElasticSortDataCreatedAtQuery{}
-// 	elasticCreatedAtQuery.DataCreatedAt.Order = "desc"
-// 	elasticCreatedAtQuery.DataCreatedAt.Mode = "avg"
-// 	elasticQuery.Sort = append(elasticQuery.Sort, elasticCreatedAtQuery)
+func SearchTweetsByUsernames(r *http.Request, usernames []string) ([]Tweet, int, error) {
+	if len(usernames) == 0 {
+		return []Tweet{}, 0, nil
+	}
 
-// 	return searchTweet(c, elasticQuery, []string{username})
-// }
+	offset := gcontext.Get(r, "offset").(int)
+	limit := gcontext.Get(r, "limit").(int)
 
-// func SearchTweetsByUsernames(c context.Context, r *http.Request, usernames []string) ([]Tweet, int, error) {
-// 	if len(usernames) == 0 {
-// 		return []Tweet{}, 0, nil
-// 	}
+	elasticQuery := elastic.ElasticFilterWithSort{}
+	elasticQuery.Size = limit
+	elasticQuery.From = offset
 
-// 	offset := gcontext.Get(r, "offset").(int)
-// 	limit := gcontext.Get(r, "limit").(int)
+	for i := 0; i < len(usernames); i++ {
+		if usernames[i] != "" {
+			elasticUsernameQuery := ElasticUsernameMatchQuery{}
+			elasticUsernameQuery.Match.Username = strings.ToLower(usernames[i])
+			elasticQuery.Query.Bool.Should = append(elasticQuery.Query.Bool.Should, elasticUsernameQuery)
+		}
+	}
 
-// 	elasticQuery := elastic.ElasticFilterWithSort{}
-// 	elasticQuery.Size = limit
-// 	elasticQuery.From = offset
+	if len(elasticQuery.Query.Bool.Should) == 0 {
+		return []Tweet{}, 0, nil
+	}
 
-// 	for i := 0; i < len(usernames); i++ {
-// 		if usernames[i] != "" {
-// 			elasticUsernameQuery := ElasticUsernameMatchQuery{}
-// 			elasticUsernameQuery.Match.Username = strings.ToLower(usernames[i])
-// 			elasticQuery.Query.Bool.Should = append(elasticQuery.Query.Bool.Should, elasticUsernameQuery)
-// 		}
-// 	}
+	elasticQuery.Query.Bool.MinimumShouldMatch = "0"
+	elasticQuery.MinScore = 0
 
-// 	if len(elasticQuery.Query.Bool.Should) == 0 {
-// 		return []Tweet{}, 0, nil
-// 	}
+	elasticCreatedAtQuery := ElasticSortDataCreatedAtQuery{}
+	elasticCreatedAtQuery.DataCreatedAt.Order = "desc"
+	elasticCreatedAtQuery.DataCreatedAt.Mode = "avg"
+	elasticQuery.Sort = append(elasticQuery.Sort, elasticCreatedAtQuery)
 
-// 	elasticQuery.Query.Bool.MinimumShouldMatch = "0"
-// 	elasticQuery.MinScore = 0
-
-// 	elasticCreatedAtQuery := ElasticSortDataCreatedAtQuery{}
-// 	elasticCreatedAtQuery.DataCreatedAt.Order = "desc"
-// 	elasticCreatedAtQuery.DataCreatedAt.Mode = "avg"
-// 	elasticQuery.Sort = append(elasticQuery.Sort, elasticCreatedAtQuery)
-
-// 	return searchTweet(c, elasticQuery, usernames)
-// }
+	return searchTweet(elasticQuery, usernames)
+}

@@ -1,7 +1,7 @@
 package search
 
 import (
-	// 	"fmt"
+	"fmt"
 	"log"
 	"net/http"
 	"strings"
@@ -86,52 +86,52 @@ func searchHeadline(elasticQuery interface{}, stringFeeds []string, feedUrls []m
 	return headlines, hits.Total, nil
 }
 
-// func SearchHeadlinesByResourceId(c context.Context, r *http.Request, feeds []models.Feed, stringFeeds []string) ([]Headline, int, error) {
-// 	if len(feeds) == 0 && len(stringFeeds) == 0 {
-// 		return []Headline{}, 0, nil
-// 	}
+func SearchHeadlinesByResourceId(r *http.Request, feeds []models.Feed, stringFeeds []string) ([]Headline, int, error) {
+	if len(feeds) == 0 && len(stringFeeds) == 0 {
+		return []Headline{}, 0, nil
+	}
 
-// 	offset := gcontext.Get(r, "offset").(int)
-// 	limit := gcontext.Get(r, "limit").(int)
+	offset := gcontext.Get(r, "offset").(int)
+	limit := gcontext.Get(r, "limit").(int)
 
-// 	elasticQuery := elastic.ElasticFilterWithSort{}
-// 	elasticQuery.Size = limit
-// 	elasticQuery.From = offset
+	elasticQuery := elastic.ElasticFilterWithSort{}
+	elasticQuery.Size = limit
+	elasticQuery.From = offset
 
-// 	for i := 0; i < len(stringFeeds); i++ {
-// 		elasticFeedUrlQuery := ElasticFeedUrlQuery{}
-// 		feedUrl := strings.ToLower(stringFeeds[i])
-// 		elasticFeedUrlQuery.Match.FeedURL = feedUrl
-// 		elasticQuery.Query.Bool.Should = append(elasticQuery.Query.Bool.Should, elasticFeedUrlQuery)
-// 	}
+	for i := 0; i < len(stringFeeds); i++ {
+		elasticFeedUrlQuery := ElasticFeedUrlQuery{}
+		feedUrl := strings.ToLower(stringFeeds[i])
+		elasticFeedUrlQuery.Match.FeedURL = feedUrl
+		elasticQuery.Query.Bool.Should = append(elasticQuery.Query.Bool.Should, elasticFeedUrlQuery)
+	}
 
-// 	for i := 0; i < len(feeds); i++ {
-// 		elasticFeedUrlQuery := ElasticFeedUrlQuery{}
-// 		feedUrl := strings.ToLower(feeds[i].FeedURL)
-// 		elasticFeedUrlQuery.Match.FeedURL = feedUrl
-// 		elasticQuery.Query.Bool.Should = append(elasticQuery.Query.Bool.Should, elasticFeedUrlQuery)
-// 	}
+	for i := 0; i < len(feeds); i++ {
+		elasticFeedUrlQuery := ElasticFeedUrlQuery{}
+		feedUrl := strings.ToLower(feeds[i].FeedURL)
+		elasticFeedUrlQuery.Match.FeedURL = feedUrl
+		elasticQuery.Query.Bool.Should = append(elasticQuery.Query.Bool.Should, elasticFeedUrlQuery)
+	}
 
-// 	if len(elasticQuery.Query.Bool.Should) == 0 {
-// 		return []Headline{}, 0, nil
-// 	}
+	if len(elasticQuery.Query.Bool.Should) == 0 {
+		return []Headline{}, 0, nil
+	}
 
-// 	minMatch := "100%"
-// 	if len(elasticQuery.Query.Bool.Should) > 1 {
-// 		approxMatch := float64(100 / len(elasticQuery.Query.Bool.Should))
-// 		minMatch = fmt.Sprint(approxMatch) + "%"
-// 	}
+	minMatch := "100%"
+	if len(elasticQuery.Query.Bool.Should) > 1 {
+		approxMatch := float64(100 / len(elasticQuery.Query.Bool.Should))
+		minMatch = fmt.Sprint(approxMatch) + "%"
+	}
 
-// 	elasticQuery.Query.Bool.MinimumShouldMatch = minMatch
-// 	elasticQuery.MinScore = 0.6
+	elasticQuery.Query.Bool.MinimumShouldMatch = minMatch
+	elasticQuery.MinScore = 0.6
 
-// 	elasticPublishDateQuery := ElasticSortDataPublishDateQuery{}
-// 	elasticPublishDateQuery.DataPublishDate.Order = "desc"
-// 	elasticPublishDateQuery.DataPublishDate.Mode = "avg"
-// 	elasticQuery.Sort = append(elasticQuery.Sort, elasticPublishDateQuery)
+	elasticPublishDateQuery := ElasticSortDataPublishDateQuery{}
+	elasticPublishDateQuery.DataPublishDate.Order = "desc"
+	elasticPublishDateQuery.DataPublishDate.Mode = "avg"
+	elasticQuery.Sort = append(elasticQuery.Sort, elasticPublishDateQuery)
 
-// 	return searchHeadline(c, elasticQuery, stringFeeds, feeds, true)
-// }
+	return searchHeadline(elasticQuery, stringFeeds, feeds, true)
+}
 
 func SearchHeadlinesByPublicationId(r *http.Request, publicationId int64) ([]Headline, int, error) {
 	if publicationId == 0 {
