@@ -235,6 +235,8 @@ func main() {
 	app.UseHandler(router)
 
 	// Register the app router
+	fs := http.FileServer(http.Dir("static"))
+	http.Handle("/static/", http.StripPrefix("/static/", fs))
 	http.Handle("/", context.ClearHandler(app))
 	http.ListenAndServe(":8080", nil)
 }
